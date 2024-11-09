@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ discussion.nom }}{% endblock %}
+
+{% block body %}
+    <h1>{{ discussion.nom }}</h1>
+
+    <p>Cette discussion a été créée par {{ discussion.auteur.nom }}.</p>
+
+    <!-- Ici vous pouvez ajouter des éléments supplémentaires comme des posts liés à la discussion -->
+
+    <a href="{{ path('discussion_list') }}" class="btn btn-secondary">Retour à la liste des discussions</a>
+{% endblock %}

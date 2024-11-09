@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des événements{% endblock %}
+
+{% block body %}
+    <h1>Gestion des événements</h1>
+
+    <div class="mb-3">
+        <a href="{{ path('admin_create_event') }}" class="btn btn-success">Ajouter un événement</a>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th>Lieu</th>
+                <th>Date début</th>
+                <th>Date fin</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for evenement in evenements %}
+                <tr>
+                    <td>{{ evenement.contenu }}</td>
+                    <td>{{ evenement.lieu }}</td>
+                    <td>{{ evenement.dateDebut|date('d/m/Y') }}</td>
+                    <td>{{ evenement.dateFin|date('d/m/Y') }}</td>
+                    <td>
+                        <a href="{{ path('admin_edit_event', { 'id': evenement.id }) }}" class="btn btn-warning">Modifier</a>
+                        <form method="post" action="{{ path('admin_delete_event', { 'id': evenement.id }) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet événement ?');">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ evenement.id) }}">
+                            <button class="btn btn-danger">Supprimer</button>
+                        </form>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="5">Aucun événement trouvé.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

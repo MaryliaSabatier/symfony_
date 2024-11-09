@@ -1,0 +1,35 @@
+{# templates/discussion/all_content.html.twig #}
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Tous les événements, posts et commentaires{% endblock %}
+
+{% block body %}
+    <h1>Liste complète des événements, posts et commentaires</h1>
+
+    <h2>Événements</h2>
+    <ul>
+        {% for event in events %}
+            <li>
+                <strong>{{ event.contenu }}</strong> - {{ event.lieu }} - {{ event.dateDebut|date('d/m/Y') }}
+                {% if event.discussion %}
+                    (Discussion associée : {{ event.discussion.nom }})
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+
+    <h2>Posts</h2>
+    <ul>
+        {% for post in posts %}
+            <li>{{ post.contenu }} - Auteur: {{ post.auteur.nomUtilisateur }}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Commentaires</h2>
+    <ul>
+        {% for commentaire in commentaires %}
+            <li>{{ commentaire.contenu }} - Post: {{ commentaire.post.contenu }}</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

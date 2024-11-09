@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des discussions{% endblock %}
+
+{% block body %}
+    <h1>Liste des discussions</h1>
+
+    <!-- Affichage de la liste des discussions -->
+    <div class="row">
+        <div class="col-3">
+            <ul class="list-group">
+                {% for discussion in discussions %}
+                    <li class="list-group-item">
+                        <a href="{{ path('discussion_show', { id: discussion.id }) }}">{{ discussion.nom }}</a>
+                    </li>
+                {% else %}
+                    <li class="list-group-item">Aucune discussion trouvée.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="col-9">
+            <!-- Contenu des discussions à droite -->
+            <div class="discussion-content">
+                <h2>Contenu de la discussion</h2>
+                <!-- Ajoutez ici le contenu spécifique de la discussion -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Bouton de déconnexion visible uniquement si l'utilisateur est connecté -->
+    {% if app.user %}
+        <div class="logout mt-4">
+            <a href="{{ path('app_logout') }}" class="btn btn-danger">Déconnexion</a>
+        </div>
+    {% endif %}
+{% endblock %}

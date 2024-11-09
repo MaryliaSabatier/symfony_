@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ discussion.nom }}{% endblock %}
+
+{% block body %}
+    <h1>{{ discussion.nom }}</h1>
+
+    <div class="discussion-posts">
+        <h2>Messages dans cette discussion</h2>
+
+        {% for post in discussion.posts %}
+            <div class="post">
+                <strong>{{ post.auteur.nomUtilisateur }}</strong> : {{ post.contenu }}
+                <p><small>Posté le {{ post.dateCreation|date('d/m/Y') }}</small></p>
+            </div>
+        {% else %}
+            <p>Aucun message dans cette discussion.</p>
+        {% endfor %}
+    </div>
+
+    <div class="add-post">
+        <h3>Ajouter un message</h3>
+        {{ form_start(postForm) }}
+            {{ form_widget(postForm) }}
+            <button type="submit" class="btn btn-primary">Ajouter</button>
+        {{ form_end(postForm) }}
+    </div>
+
+    <a href="{{ path('discussion_list') }}" class="btn btn-secondary">Retour aux discussions</a>
+{% endblock %}

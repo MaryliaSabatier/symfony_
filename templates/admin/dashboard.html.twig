@@ -1,0 +1,20 @@
+{# templates/admin/dashboard.html.twig #}
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Tableau de bord Admin{% endblock %}
+
+{% block body %}
+    <h1>Bienvenue dans le tableau de bord administrateur</h1>
+
+    <div class="buttons">
+        <a href="{{ path('admin_user_management') }}" class="btn btn-primary">Gestion des utilisateurs</a>
+        <a href="{{ path('admin_event_management') }}" class="btn btn-primary">Gestion des événements</a>
+        <!-- Lien vers la gestion des discussions -->
+        <a href="{{ path('admin_discussion_list') }}" class="btn btn-primary">Gestion des discussions</a>
+    </div>
+
+    <div class="logout">
+        <a href="{{ path('app_logout') }}" class="btn btn-danger">Se déconnecter</a>
+    </div>
+{% endblock %}

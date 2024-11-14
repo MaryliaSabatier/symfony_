@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Créer une Commission Temporaire{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>Créer un evenement Temporaire</h1>
+
+    {{ form_start(form) }}
+        {{ form_row(form.contenu, {'label': 'Description de l evenement'}) }}
+        {{ form_row(form.lieu, {'label': 'Lieu de l evenement'}) }}
+        {{ form_row(form.dateDebut, {'label': 'Date de début'}) }}
+        {{ form_row(form.dateFin, {'label': 'Date de fin'}) }}
+        {{ form_row(form.discussion, {'label': 'Associer à une discussion'}) }}
+        
+        <button type="submit" class="btn btn-primary">Créer la commission</button>
+    
+    {{ form_end(form) }}
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Créer une Discussion{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>Créer une Discussion</h1>
+
+    {{ form_start(form) }}
+        {{ form_row(form.nom, {'label': 'Nom de la discussion'}) }}
+        <button type="submit" class="btn btn-primary">Créer la discussion</button>
+    {{ form_end(form) }}
+</div>
+{% endblock %}

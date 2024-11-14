@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier la Discussion{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>Modifier la Discussion</h1>
+
+    {{ form_start(form) }}
+        {{ form_row(form.nom, {'label': 'Nom de la discussion'}) }}
+        <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+    {{ form_end(form) }}
+
+    <a href="{{ path('moderator_manage_discussions') }}" class="btn btn-secondary mt-3">Retour à la gestion des discussions</a>
+</div>
+{% endblock %}

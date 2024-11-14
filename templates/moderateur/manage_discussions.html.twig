@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des discussions{% endblock %}
+
+{% block body %}
+    <h1>Gestion des discussions</h1>
+
+    <div class="mb-3">
+        <a href="{{ path('moderator_dashboard') }}" class="btn btn-secondary">Retour au Dashboard</a>
+        <a href="{{ path('moderator_create_discussion') }}" class="btn btn-success">Ajouter une discussion</a>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Auteur</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for discussion in discussions %}
+                <tr>
+                    <td>{{ discussion.nom }}</td>
+                    <td>{{ discussion.auteur.nomUtilisateur }}</td>
+                    <td>
+                        <a href="{{ path('moderator_edit_discussion', { 'id': discussion.id }) }}" class="btn btn-warning">Modifier</a>
+                        <form method="post" action="{{ path('moderator_delete_discussion', { 'id': discussion.id }) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette discussion ?');" style="display:inline;">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ discussion.id) }}">
+                            <button class="btn btn-danger">Supprimer</button>
+                        </form>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="3">Aucune discussion trouvée.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

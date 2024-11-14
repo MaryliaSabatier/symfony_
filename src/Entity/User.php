@@ -21,6 +21,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 180)]
     private ?string $email = null;
 
+    // Ajout de la propriété pour le nom d'utilisateur
+    #[ORM\Column(length: 100)]
+    private ?string $nomUtilisateur = null;
+
     /**
      * @var list<string> The user roles
      */
@@ -50,6 +54,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function getNomUtilisateur(): ?string
+    {
+        return $this->nomUtilisateur;
+    }
+
+    public function setNomUtilisateur(string $nomUtilisateur): static
+    {
+        $this->nomUtilisateur = $nomUtilisateur;
+        return $this;
+    }
     /**
      * A visual identifier that represents this user.
      *

@@ -5,6 +5,20 @@
 {% block body %}
 <div class="container mt-4">
     <h1>Bienvenue dans le tableau de bord du Modérateur</h1>
+    <!-- Bouton de déconnexion -->
+    <div class="text-end mb-4">
+        <a href="{{ path('app_logout') }}" class="btn btn-danger">Déconnexion</a>
+    </div>
+
+        <!-- Bouton pour accéder à la gestion des événements temporaires -->
+    <div class="mt-4 mb-4">
+        <a href="{{ path('moderator_manage_events') }}" class="btn btn-info">Gestion des événements temporaires</a>
+    </div>
+
+    <!-- Bouton pour accéder à la gestion des discussions -->
+    <div class="mt-4 mb-4">
+        <a href="{{ path('moderator_manage_discussions') }}" class="btn btn-info">Gestion des discussions</a>
+    </div>
 
     <div class="row mt-4">
         <!-- Section des discussions à modérer -->

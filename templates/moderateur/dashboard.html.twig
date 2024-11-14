@@ -1,0 +1,46 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tableau de bord Modérateur{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>Bienvenue dans le tableau de bord du Modérateur</h1>
+
+    <div class="row mt-4">
+        <!-- Section des discussions à modérer -->
+        <div class="col-md-6">
+            <h2>Discussions à modérer</h2>
+            <p>Ici, vous pouvez voir et gérer les discussions nécessitant votre attention.</p>
+            <!-- Ajouter une liste de discussions nécessitant une modération -->
+            <ul>
+                <!-- Exemple d'élément de discussion -->
+                <li>Discussion 1 - Signalée par un utilisateur</li>
+                <li>Discussion 2 - Messages non appropriés</li>
+                <!-- ... -->
+            </ul>
+        </div>
+
+        <!-- Section des utilisateurs récents ou signalés -->
+        <div class="col-md-6">
+            <h2>Signalements récents</h2>
+            <p>Gérez les signalements faits par les utilisateurs.</p>
+            <!-- Ajouter une liste des signalements -->
+            <ul>
+                <!-- Exemple d'élément de signalement -->
+                <li>Utilisateur X a signalé un message inapproprié</li>
+                <li>Utilisateur Y a besoin d'une assistance pour un événement</li>
+                <!-- ... -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- Autres sections pour les modérateurs -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <h2>Statistiques et Activités Récentes</h2>
+            <p>Surveillez les activités récentes dans les différentes commissions.</p>
+            <!-- Afficher des statistiques ou des graphiques si besoin -->
+        </div>
+    </div>
+</div>
+{% endblock %}

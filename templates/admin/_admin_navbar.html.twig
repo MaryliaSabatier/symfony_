@@ -1,0 +1,31 @@
+<!-- templates/admin/_admin_navbar.html.twig -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ path('admin_dashboard') }}">Tableau de bord</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarAdminContent" aria-controls="navbarAdminContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarAdminContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ path('admin_manage_users') }}">Gestion des Utilisateurs</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ path('admin_manage_events') }}">Gestion des Événements</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ path('admin_manage_discussions') }}">Gestion des Discussions</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ path('admin_settings') }}">Paramètres</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ path('app_logout') }}">Déconnexion</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>

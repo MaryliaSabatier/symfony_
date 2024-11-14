@@ -70,7 +70,7 @@ class AdminController extends AbstractController
     }
 
     #[Route('/admin/users/edit/{id}', name: 'admin_edit_user')]
-    public function editUser(User $user, Request $request, EntityManagerInterface $entityManager): Response
+    public function editUser(User $user, Request $request, UserPasswordHasherInterface $passwordHasher, EntityManagerInterface $entityManager): Response
     {
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
 
@@ -79,6 +79,16 @@ class AdminController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Si un nouveau mot de passe est défini, le hacher avant de sauvegarder
+            if ($form->get('plainPassword')->getData()) {
+                $user->setPassword(
+                    $passwordHasher->hashPassword(
+                        $user,
+                        $form->get('plainPassword')->getData()
+                    )
+                );
+            }
+
             $entityManager->flush();
             $this->addFlash('success', 'Utilisateur modifié avec succès.');
 
@@ -96,20 +106,24 @@ class AdminController extends AbstractController
     {
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
     
-        // Logique pour la gestion des événements (commissions)
+        // Logique pour la gestion des événements (à compléter)
         return $this->render('admin/manage_events.html.twig');
     }
 
-
-    #[Route('/admin/users/delete/{id}', name: 'admin_delete_user', methods: ['POST', 'GET'])]
-    public function deleteUser(User $user, EntityManagerInterface $entityManager): Response
+    #[Route('/admin/users/delete/{id}', name: 'admin_delete_user', methods: ['POST'])]
+    public function deleteUser(User $user, EntityManagerInterface $entityManager, Request $request): Response
     {
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
 
-        $entityManager->remove($user);
-        $entityManager->flush();
+        // Vérification du token CSRF pour sécuriser la suppression
+        if ($this->isCsrfTokenValid('delete_user_' . $user->getId(), $request->request->get('_token'))) {
+            $entityManager->remove($user);
+            $entityManager->flush();
 
-        $this->addFlash('success', 'Utilisateur supprimé avec succès.');
+            $this->addFlash('success', 'Utilisateur supprimé avec succès.');
+        } else {
+            $this->addFlash('error', 'Token CSRF invalide.');
+        }
 
         return $this->redirectToRoute('admin_user_management');
     }

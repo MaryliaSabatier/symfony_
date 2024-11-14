@@ -1,0 +1,9 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    {% include 'admin/_admin_navbar.html.twig' %}  <!-- Inclure la barre de navigation spécifique à l'administration -->
+
+    <div class="container mt-4">
+        {% block admin_content %}{% endblock %}  <!-- Bloc pour le contenu spécifique de chaque page d'administration -->
+    </div>
+{% endblock %}

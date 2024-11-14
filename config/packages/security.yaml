@@ -19,12 +19,15 @@ security:
             form_login:
                 login_path: app_login
                 check_path: app_login
-                default_target_path: /admin/dashboard
-
+                always_use_default_target_path: true   # Active la redirection vers la route par défaut
+                default_target_path: /redirect         # Route de redirection contrôlée par SecurityController
+            
             logout:
                 path: app_logout
                 target: app_login
 
     access_control:
-        #- { path: ^/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
-        #- { path: ^/admin, roles: ROLE_ADMIN }
+        - { path: ^/admin, roles: ROLE_ADMIN }
+        - { path: ^/user, roles: ROLE_USER }
+        - { path: ^/moderateur, roles: ROLE_MODERATOR  }
+

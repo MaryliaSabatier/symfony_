@@ -1,0 +1,31 @@
+{# templates/user/edit_profile.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier Profil{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>Modifier votre profil</h1>
+
+    {{ form_start(form) }}
+        <div class="form-group mb-3">
+            {{ form_label(form.email) }}
+            {{ form_widget(form.email) }}
+            {{ form_errors(form.email) }}
+        </div>
+        <div class="form-group mb-3">
+            {{ form_label(form.nomUtilisateur) }}
+            {{ form_widget(form.nomUtilisateur) }}
+            {{ form_errors(form.nomUtilisateur) }}
+        </div>
+        <div class="form-group mb-3">
+            {{ form_label(form.plainPassword) }}
+            {{ form_widget(form.plainPassword, { 'attr': {'placeholder': 'Laissez vide si inchangé'} }) }}
+            {{ form_errors(form.plainPassword) }}
+        </div>
+        <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+    {{ form_end(form) }}
+
+    <a href="{{ path('user_dashboard') }}" class="btn btn-secondary mt-3">Retour au tableau de bord</a>
+</div>
+{% endblock %}

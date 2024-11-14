@@ -1,10 +1,61 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Tableau de bord Utilisateur{% endblock %}
+{% block title %}Dashboard Utilisateur{% endblock %}
 
 {% block body %}
-<div class="container mt-4">
-    <h1>Bienvenue sur votre tableau de bord</h1>
-    <p>Contenu spécifique pour l'utilisateur standard.</p>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Menu latéral -->
+        <div class="col-md-2 col-3 bg-primary text-white p-2 sidebar">
+            <div class="menu">
+                <!-- Bouton pour le fil commun -->
+                <div class="menu-item active mb-3">
+                    <a href="{{ path('fil_commun') }}" class="text-white text-decoration-none d-flex align-items-center">
+                        <i class="fas fa-stream mr-2"></i> Fil Commun
+                    </a>
+                </div>
+                <!-- Boutons pour les discussions -->
+                <div class="menu-item mb-3">
+                    <a href="{{ path('discussion_show', {'id': 1}) }}" class="text-white text-decoration-none d-flex align-items-center">
+                        <i class="fas fa-futbol mr-2"></i> Discussion 1
+                    </a>
+                </div>
+                <div class="menu-item mb-3">
+                    <a href="{{ path('discussion_show', {'id': 2}) }}" class="text-white text-decoration-none d-flex align-items-center">
+                        <i class="fas fa-comments mr-2"></i> Discussion 2
+                    </a>
+                </div>
+                <!-- Ajoutez ici d'autres icônes pour chaque discussion -->
+            </div>
+        </div>
+
+        <!-- Contenu principal -->
+        <div class="col-md-10 col-9 content">
+            <div class="header d-flex justify-content-between align-items-center p-3 border-bottom">
+                <h2 class="mb-0">Fil Commun</h2>
+                <a href="{{ path('app_logout') }}" class="btn btn-danger">Déconnexion</a>
+            </div>
+
+            <div class="posts mt-4">
+                <!-- Exemple de Post avec réponses -->
+                <div class="post mb-3 p-3 border rounded">
+                    <p><strong>Laura</strong> : Recherche bénévoles motivés pour la prochaine soirée à thème "Années 80" ! 🎉🕺</p>
+                    <div class="responses pl-3">
+                        <hr>
+                        <p><strong>Paul</strong> (Coordination) : Je suis disponible pour aider à l'organisation et/ou l'animation de la soirée.</p>
+                        <p><strong>Pierre</strong> (Technique) : Je me porte volontaire pour participer à la préparation et au bon déroulement de l'événement.</p>
+                    </div>
+                </div>
+
+                <!-- Exemple d'Événement -->
+                <div class="event mb-3 p-3 border rounded">
+                    <h5>📅 Événement</h5>
+                    <p><strong>Formation</strong> : "Maîtriser Excel pour la gestion budgétaire" 🧑‍🏫💼</p>
+                    <p><strong>Date</strong> : Jeudi 27 juin, 19h-22h</p>
+                    <p><strong>Lieu</strong> : Salle informatique</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

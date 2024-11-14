@@ -1,0 +1,45 @@
+/* Menu latéral */
+.sidebar {
+    height: 100vh;
+    background-color: #007bff; /* Couleur bleu pour correspondre au visuel */
+}
+
+.menu-item a {
+    color: white;
+    font-size: 1.1em;
+    text-decoration: none;
+    display: block;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.menu-item a:hover, .menu-item a.active {
+    background-color: #0056b3;
+    color: white;
+}
+
+.menu-item i {
+    margin-right: 10px;
+}
+
+/* Contenu principal */
+.content {
+    background-color: #f8f9fa;
+}
+
+.post, .event {
+    border: 1px solid #dee2e6;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.responses {
+    border-top: 1px dashed #ccc;
+    padding-top: 10px;
+    margin-top: 10px;
+}
+
+.event h5 {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+}

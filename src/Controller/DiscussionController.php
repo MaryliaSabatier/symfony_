@@ -3,7 +3,9 @@
 namespace App\Controller;
 
 use App\Entity\Discussion;
+use App\Entity\Post;
 use App\Form\DiscussionType;
+use App\Form\PostType;
 use App\Repository\CommentaireRepository;
 use App\Repository\DiscussionRepository;
 use App\Repository\EvenementRepository;
@@ -20,9 +22,7 @@ class DiscussionController extends AbstractController
     #[Route('/admin/discussions', name: 'admin_discussion_list', methods: ['GET'])]
     public function list(DiscussionRepository $discussionRepository): Response
     {
-        // Vérifie si l'utilisateur a le rôle admin
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
-
         $discussions = $discussionRepository->findAll();
 
         return $this->render('admin/discussion_list.html.twig', [
@@ -104,18 +104,40 @@ class DiscussionController extends AbstractController
     }
 
     // Affichage d'une discussion spécifique pour tous les utilisateurs
-    #[Route('/discussions/{id}', name: 'discussion_show', methods: ['GET'])]
-    public function show(Discussion $discussion): Response
+    #[Route('/discussions/{id}', name: 'discussion_show', methods: ['GET', 'POST'])]
+    public function show(Discussion $discussion, Request $request, EntityManagerInterface $entityManager): Response
     {
+        // Créer un nouveau message (Post) pour cette discussion
+        $post = new Post();
+        $post->setDiscussion($discussion);
+        $post->setAuteur($this->getUser());
+        $post->setDateCreation(new \DateTime());
+
+        // Formulaire pour ajouter un message
+        $postForm = $this->createForm(PostType::class, $post);
+        $postForm->handleRequest($request);
+
+        if ($postForm->isSubmitted() && $postForm->isValid()) {
+            $entityManager->persist($post);
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Message ajouté avec succès.');
+            return $this->redirectToRoute('discussion_show', ['id' => $discussion->getId()]);
+        }
+
         return $this->render('discussion/show.html.twig', [
             'discussion' => $discussion,
+            'postForm' => $postForm->createView(),
         ]);
     }
 
     // Page récapitulative avec tous les posts, commentaires et événements
     #[Route('/tout', name: 'all_posts_comments_events', methods: ['GET'])]
-    public function allPostsCommentsEvents(EvenementRepository $eventRepository, PostRepository $postRepository, CommentaireRepository $commentaireRepository): Response
-    {
+    public function allPostsCommentsEvents(
+        EvenementRepository $eventRepository,
+        PostRepository $postRepository,
+        CommentaireRepository $commentaireRepository
+    ): Response {
         // Récupérer les 10 derniers événements, posts, et commentaires
         $events = $eventRepository->findBy([], ['dateCreation' => 'DESC'], 10);
         $posts = $postRepository->findBy([], ['dateCreation' => 'DESC'], 10);

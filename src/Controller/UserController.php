@@ -19,7 +19,7 @@ class UserController extends AbstractController
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
         return $this->render('user/dashboard.html.twig', [
-            'user' => $this->getUser(), // Passer l'utilisateur au template
+            'user' => $this->getUser(),
             'controller_name' => 'Tableau de bord Utilisateur',
         ]);
     }
@@ -31,24 +31,20 @@ class UserController extends AbstractController
 
         /** @var User $user */
         $user = $this->getUser();
-
-        // Créer le formulaire pour le profil utilisateur
         $form = $this->createForm(UserProfileType::class, $user);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Vérifie si le champ "plainPassword" a été rempli
+            // Hachage du nouveau mot de passe si fourni
             $newPassword = $form->get('plainPassword')->getData();
             if ($newPassword) {
-                // Hache le nouveau mot de passe et l'assigne à l'utilisateur
                 $user->setPassword($passwordHasher->hashPassword($user, $newPassword));
             }
 
-            // Enregistrement des modifications
             $entityManager->flush();
 
             $this->addFlash('success', 'Profil mis à jour avec succès.');
-            return $this->redirectToRoute('user_dashboard');
+            return $this->redirectToRoute('fil_commun'); // Rediriger vers le Fil Commun
         }
 
         return $this->render('user/edit_profile.html.twig', [

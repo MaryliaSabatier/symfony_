@@ -1,7 +1,87 @@
-{# templates/fil_commun/index.html.twig #}
 {% extends 'base.html.twig' %}
 
 {% block title %}Fil Commun{% endblock %}
 
 {% block body %}
-    <h1>Bienvenue dans le Fil Commun</h1>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Menu latéral gauche -->
+        <div class="col-md-2 col-3 bg-primary text-white sidebar">
+            <div class="menu p-3">
+                <h5 class="text-center">Tout</h5>
+                
+                <!-- Bouton pour le fil commun -->
+                <div class="menu-item mt-4">
+                    <a href="{{ path('fil_commun') }}" class="text-white d-flex align-items-center mb-2">
+                        <i class="fas fa-stream mr-2"></i> Fil Commun
+                    </a>
+                </div>
+                
+                <!-- Boucle pour afficher les icônes de chaque discussion -->
+                {% for discussion in discussions %}
+                    <div class="menu-item mb-3">
+                        <a href="{{ path('discussion_show', { 'id': discussion.id }) }}" class="text-white d-flex align-items-center">
+                            <i class="fas fa-comments mr-2"></i> {{ discussion.nom }}
+                        </a>
+                    </div>
+                {% endfor %}
+                
+                <hr class="bg-light">
+
+                <!-- Lien pour modifier le profil -->
+                <div class="menu-item mb-3">
+                    <a href="{{ path('user_edit_profile') }}" class="text-white d-flex align-items-center">
+                        <i class="fas fa-user-edit mr-2"></i> Modifier Profil
+                    </a>
+                </div>
+
+                <!-- Lien pour se déconnecter -->
+                <div class="menu-item">
+                    <a href="{{ path('app_logout') }}" class="text-white d-flex align-items-center">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Déconnexion
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenu principal -->
+        <div class="col-md-10 col-9 content bg-light p-4">
+            <h2 class="mb-4">Fil Commun</h2>
+
+            <div class="d-flex justify-content-between">
+                <!-- Section des discussions -->
+                <div class="w-75 pr-4">
+                    <h2>Discussions</h2>
+                    {% for discussion in discussions %}
+                        <div class="discussion-item mb-3 p-3 border rounded">
+                            <h3>{{ discussion.nom }}</h3>
+                            <p>Créé par {{ discussion.auteur.nomUtilisateur }}.</p>
+                            <a href="{{ path('discussion_show', { id: discussion.id }) }}" class="btn btn-primary">Voir la discussion</a>
+                        </div>
+                    {% else %}
+                        <p>Aucune discussion disponible.</p>
+                    {% endfor %}
+                </div>
+
+                <!-- Section des événements -->
+                <div class="w-25 pl-4">
+                    <h2>Événements</h2>
+                    {% for evenement in evenements %}
+                        <div class="event-item mb-3 p-3 border rounded">
+                            <h3>{{ evenement.contenu }}</h3>
+                            <p><strong>Lieu :</strong> {{ evenement.lieu }}</p>
+                            <p><strong>Date de début :</strong> {{ evenement.dateDebut|date('d/m/Y') }}</p>
+                            <p><strong>Date de fin :</strong> {{ evenement.dateFin|date('d/m/Y') }}</p>
+                            {% if evenement.discussion %}
+                                <p>Associé à la discussion : <a href="{{ path('discussion_show', { id: evenement.discussion.id }) }}">{{ evenement.discussion.nom }}</a></p>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <p>Aucun événement disponible.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

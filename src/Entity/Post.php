@@ -2,30 +2,38 @@
 
 namespace App\Entity;
 
-use App\Entity\Discussion;
+use App\Repository\PostRepository;
 use Doctrine\ORM\Mapping as ORM;
+use App\Entity\Discussion;
+use App\Entity\User;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: PostRepository::class)]
 class Post
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    private $id;
+    private ?int $id = null;
 
     #[ORM\Column(type: 'text')]
-    private $contenu;
+    private ?string $contenu = null;
 
     #[ORM\Column(type: 'datetime')]
-    private $dateCreation;
+    private ?\DateTimeInterface $dateCreation = null;
 
-    #[ORM\ManyToOne(targetEntity: Discussion::class)]
+    #[ORM\ManyToOne(targetEntity: Discussion::class, inversedBy: 'posts')]
     #[ORM\JoinColumn(nullable: false)]
-    private $discussion;
+    private ?Discussion $discussion = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: false)]
-    private $auteur;
+    private ?User $auteur = null;
+
+    // Constructor
+    public function __construct()
+    {
+        $this->dateCreation = new \DateTime(); // Définit la date de création à maintenant par défaut
+    }
 
     // Getters et Setters
 

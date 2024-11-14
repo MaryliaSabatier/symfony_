@@ -25,9 +25,13 @@ class Discussion
     #[ORM\OneToMany(mappedBy: 'discussion', targetEntity: Post::class, cascade: ['persist', 'remove'])]
     private Collection $posts;
 
+    #[ORM\OneToMany(mappedBy: 'discussion', targetEntity: Evenement::class, cascade: ['persist', 'remove'])]
+    private Collection $evenements;
+
     public function __construct()
     {
         $this->posts = new ArrayCollection();
+        $this->evenements = new ArrayCollection();
     }
 
     // Getters et setters
@@ -85,6 +89,36 @@ class Discussion
             // Définir la relation inverse à null si nécessaire
             if ($post->getDiscussion() === $this) {
                 $post->setDiscussion(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Evenement>
+     */
+    public function getEvenements(): Collection
+    {
+        return $this->evenements;
+    }
+
+    public function addEvenement(Evenement $evenement): self
+    {
+        if (!$this->evenements->contains($evenement)) {
+            $this->evenements->add($evenement);
+            $evenement->setDiscussion($this); // Assurez la cohérence de la relation inverse
+        }
+
+        return $this;
+    }
+
+    public function removeEvenement(Evenement $evenement): self
+    {
+        if ($this->evenements->removeElement($evenement)) {
+            // Définir la relation inverse à null si nécessaire
+            if ($evenement->getDiscussion() === $this) {
+                $evenement->setDiscussion(null);
             }
         }
 

@@ -31,7 +31,7 @@ class SecurityController extends AbstractController
         } elseif ($this->isGranted('ROLE_MODERATOR')) {
             return $this->redirectToRoute('moderator_dashboard');
         } else {
-            return $this->redirectToRoute('user_dashboard');
+            return $this->redirectToRoute('fil_commun');
         }
     }
 

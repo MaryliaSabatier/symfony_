@@ -103,10 +103,17 @@ class DiscussionController extends AbstractController
         ]);
     }
 
-    // Affichage d'une discussion spécifique pour tous les utilisateurs
+    // Affichage d'une discussion spécifique pour tous les utilisateurs avec ajout d'un message et affichage des événements associés
     #[Route('/discussions/{id}', name: 'discussion_show', methods: ['GET', 'POST'])]
-    public function show(Discussion $discussion, Request $request, EntityManagerInterface $entityManager): Response
-    {
+    public function show(
+        Discussion $discussion,
+        Request $request,
+        EntityManagerInterface $entityManager,
+        EvenementRepository $evenementRepository
+    ): Response {
+        // Récupérer les événements associés à la discussion
+        $evenements = $evenementRepository->findBy(['discussion' => $discussion], ['dateCreation' => 'DESC']);
+
         // Créer un nouveau message (Post) pour cette discussion
         $post = new Post();
         $post->setDiscussion($discussion);
@@ -128,6 +135,7 @@ class DiscussionController extends AbstractController
         return $this->render('discussion/show.html.twig', [
             'discussion' => $discussion,
             'postForm' => $postForm->createView(),
+            'evenements' => $evenements,
         ]);
     }
 

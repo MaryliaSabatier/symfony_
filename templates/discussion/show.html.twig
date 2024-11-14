@@ -9,10 +9,28 @@
         <h1>{{ discussion.nom }}</h1>
         <p>Cette discussion a été créée par {{ discussion.auteur.nomUtilisateur }}.</p>
 
-        <div class="discussion-posts">
+        <!-- Section des événements associés à la discussion -->
+        <div class="discussion-events mt-4">
+            <h2>Événements associés</h2>
+            {% if discussion.evenements is not empty %}
+                {% for evenement in discussion.evenements %}
+                    <div class="event-item mb-3 p-3 border rounded">
+                        <h3>{{ evenement.contenu }}</h3>
+                        <p><strong>Lieu :</strong> {{ evenement.lieu }}</p>
+                        <p><strong>Date de début :</strong> {{ evenement.dateDebut|date('d/m/Y') }}</p>
+                        <p><strong>Date de fin :</strong> {{ evenement.dateFin|date('d/m/Y') }}</p>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>Aucun événement associé à cette discussion.</p>
+            {% endif %}
+        </div>
+
+        <!-- Section des messages de la discussion -->
+        <div class="discussion-posts mt-4">
             <h2>Messages dans cette discussion</h2>
             {% for post in discussion.posts %}
-                <div class="post">
+                <div class="post mb-3 p-3 border rounded">
                     <strong>{{ post.auteur.nomUtilisateur }}</strong> : {{ post.contenu }}
                     <p><small>Posté le {{ post.dateCreation|date('d/m/Y') }}</small></p>
                 </div>
@@ -21,6 +39,7 @@
             {% endfor %}
         </div>
 
+        <!-- Formulaire pour ajouter un nouveau message -->
         <div class="add-post mt-4">
             <h3>Ajouter un message</h3>
             {{ form_start(postForm) }}

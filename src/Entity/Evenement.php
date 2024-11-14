@@ -18,13 +18,13 @@ class Evenement
     #[ORM\Column(type: 'text')]
     private ?string $contenu = null;
 
-    #[ORM\Column(type: 'date')]
+    #[ORM\Column(type: 'datetime')]
     private ?\DateTimeInterface $dateCreation = null;
 
-    #[ORM\Column(type: 'date')]
+    #[ORM\Column(type: 'datetime')]
     private ?\DateTimeInterface $dateDebut = null;
 
-    #[ORM\Column(type: 'date')]
+    #[ORM\Column(type: 'datetime')]
     private ?\DateTimeInterface $dateFin = null;
 
     #[ORM\Column(type: 'string', length: 255)]
@@ -34,9 +34,14 @@ class Evenement
     #[ORM\JoinColumn(nullable: false)]
     private ?User $auteur = null;
 
-    #[ORM\ManyToOne(targetEntity: Discussion::class)]
+    #[ORM\ManyToOne(targetEntity: Discussion::class, inversedBy: 'evenements')]
     #[ORM\JoinColumn(nullable: true)]
     private ?Discussion $discussion = null;
+
+    public function __construct()
+    {
+        $this->dateCreation = new \DateTime(); // Initialisation de la date de création
+    }
 
     // Getters et setters
 

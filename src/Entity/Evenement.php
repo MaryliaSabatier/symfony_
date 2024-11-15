@@ -38,9 +38,13 @@ class Evenement
     #[ORM\JoinColumn(nullable: true)]
     private ?Discussion $discussion = null;
 
+    #[ORM\OneToMany(mappedBy: 'evenement', targetEntity: Abonnement::class, cascade: ['remove'])]
+    private Collection $abonnements;
+
     public function __construct()
     {
         $this->dateCreation = new \DateTime(); // Initialisation de la date de création
+        $this->abonnements = new ArrayCollection();
     }
 
     // Getters et setters
@@ -130,6 +134,38 @@ class Evenement
     public function setDiscussion(?Discussion $discussion): self
     {
         $this->discussion = $discussion;
+
+        return $this;
+    }
+
+    // Gestion des abonnements
+
+    /**
+     * @return Collection<int, Abonnement>
+     */
+    public function getAbonnements(): Collection
+    {
+        return $this->abonnements;
+    }
+
+    public function addAbonnement(Abonnement $abonnement): self
+    {
+        if (!$this->abonnements->contains($abonnement)) {
+            $this->abonnements->add($abonnement);
+            $abonnement->setEvenement($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAbonnement(Abonnement $abonnement): self
+    {
+        if ($this->abonnements->removeElement($abonnement)) {
+            // Set the owning side to null (unless already changed)
+            if ($abonnement->getEvenement() === $this) {
+                $abonnement->setEvenement(null);
+            }
+        }
 
         return $this;
     }

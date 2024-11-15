@@ -5,12 +5,15 @@ namespace App\Controller;
 use App\Entity\Discussion;
 use App\Entity\Post;
 use App\Entity\Commentaire;
+use App\Entity\Evenement;
+use App\Entity\Abonnement;
 use App\Form\DiscussionType;
 use App\Form\PostType;
 use App\Form\CommentaireType;
 use App\Repository\DiscussionRepository;
 use App\Repository\EvenementRepository;
 use App\Repository\PostRepository;
+use App\Repository\AbonnementRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -100,13 +103,13 @@ class DiscussionController extends AbstractController
     }
 
     #[Route('/discussions/{id}', name: 'discussion_show', methods: ['GET', 'POST'])]
-    #[Route('/discussions/{id}', name: 'discussion_show', methods: ['GET', 'POST'])]
     public function show(
         Discussion $discussion,
         Request $request,
         EntityManagerInterface $entityManager,
         EvenementRepository $evenementRepository,
-        PostRepository $postRepository
+        PostRepository $postRepository,
+        AbonnementRepository $abonnementRepository
     ): Response {
         // Récupération du paramètre de recherche
         $query = $request->query->get('q', '');
@@ -122,8 +125,14 @@ class DiscussionController extends AbstractController
                 ->getQuery()
                 ->getResult()
             : $evenementRepository->findBy(['discussion' => $discussion], ['dateCreation' => 'DESC']);
-    
-        // Recherche des posts correspondant au terme
+        
+            // Recherche des abonnements pour l'utilisateur connecté
+        $user = $this->getUser();
+        $abonnementIds = $user 
+            ? $abonnementRepository->findSubscribedEventIdsByUser($user)
+            : [];   
+        
+            // Recherche des posts correspondant au terme
         $posts = $query
             ? $postRepository->findByDiscussionAndQuery($discussion, $query)
             : $postRepository->findBy(['discussion' => $discussion], ['dateCreation' => 'DESC']);
@@ -165,7 +174,53 @@ class DiscussionController extends AbstractController
             'commentForms' => $commentForms,
         ]);
     }
-    
+    #[Route('/evenement/{id}/abonner', name: 'abonner_evenement', methods: ['POST'])]
+    public function abonnerEvenement(Evenement $evenement, EntityManagerInterface $entityManager): Response
+    {
+        $user = $this->getUser();
+
+        $abonnement = $entityManager->getRepository(Abonnement::class)->findOneBy([
+            'user' => $user,
+            'evenement' => $evenement,
+        ]);
+
+        if ($abonnement) {
+            $this->addFlash('error', 'Vous êtes déjà abonné à cet événement.');
+        } else {
+            $nouvelAbonnement = new Abonnement();
+            $nouvelAbonnement->setUser($user);
+            $nouvelAbonnement->setEvenement($evenement);
+
+            $entityManager->persist($nouvelAbonnement);
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Vous êtes abonné à cet événement.');
+        }
+
+        return $this->redirectToRoute('discussion_show', ['id' => $evenement->getDiscussion()->getId()]);
+    }
+
+    #[Route('/evenement/{id}/desabonner', name: 'desabonner_evenement', methods: ['POST'])]
+    public function desabonnerEvenement(Evenement $evenement, EntityManagerInterface $entityManager): Response
+    {
+        $user = $this->getUser();
+
+        $abonnement = $entityManager->getRepository(Abonnement::class)->findOneBy([
+            'user' => $user,
+            'evenement' => $evenement,
+        ]);
+
+        if ($abonnement) {
+            $entityManager->remove($abonnement);
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Vous êtes désabonné de cet événement.');
+        } else {
+            $this->addFlash('error', 'Vous n\'êtes pas abonné à cet événement.');
+        }
+
+        return $this->redirectToRoute('discussion_show', ['id' => $evenement->getDiscussion()->getId()]);
+    }
 
     #[Route('/post/{id}/comment', name: 'add_comment', methods: ['POST'])]
     public function addComment(
@@ -292,5 +347,6 @@ public function deleteComment(
 
     return $this->redirectToRoute('discussion_show', ['id' => $commentaire->getPost()->getDiscussion()->getId()]);
 }
+
 
 }

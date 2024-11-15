@@ -48,6 +48,23 @@
                         <p><strong>Lieu :</strong> {{ evenement.lieu }}</p>
                         <p><strong>Date de début :</strong> {{ evenement.dateDebut|date('d/m/Y') }}</p>
                         <p><strong>Date de fin :</strong> {{ evenement.dateFin|date('d/m/Y') }}</p>
+
+                        <!-- Boutons d'abonnement/désabonnement -->
+                        <div class="event-actions mt-3">
+                            {% if abonnementIds is defined and evenement.id in abonnementIds %}
+                                <!-- Bouton pour se désabonner -->
+                                <form action="{{ path('evenement_desabonner', { id: evenement.id }) }}" method="post" class="d-inline">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('desabonner_evenement_' ~ evenement.id) }}">
+                                    <button type="submit" class="btn btn-danger">Se désabonner</button>
+                                </form>
+                            {% else %}
+                            <!-- Si l'utilisateur n'est pas abonné -->
+                            <form action="{{ path('evenement_abonner', { id: evenement.id }) }}" method="post" class="d-inline">
+                                <input type="hidden" name="_token" value="{{ csrf_token('abonner_evenement_' ~ evenement.id) }}">
+                                <button type="submit" class="btn btn-primary">S'abonner</button>
+                            </form>
+                            {% endif %}
+                        </div>
                     </div>
                 {% endfor %}
             {% else %}

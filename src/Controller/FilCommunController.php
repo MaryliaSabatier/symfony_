@@ -1,11 +1,12 @@
 <?php
-// src/Controller/FilCommunController.php
 
 namespace App\Controller;
 
+use App\Entity\Abonnement;
 use App\Repository\DiscussionRepository;
 use App\Repository\EvenementRepository;
 use App\Repository\PostRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,7 +19,8 @@ class FilCommunController extends AbstractController
         Request $request,
         DiscussionRepository $discussionRepository,
         EvenementRepository $evenementRepository,
-        PostRepository $postRepository
+        PostRepository $postRepository,
+        EntityManagerInterface $entityManager
     ): Response {
         $query = $request->query->get('q', '');
 
@@ -33,11 +35,16 @@ class FilCommunController extends AbstractController
 
         $discussions = $discussionRepository->findAll();
 
+        // Récupérer les abonnements de l'utilisateur connecté
+        $user = $this->getUser();
+        $abonnementIds = $user ? $entityManager->getRepository(Abonnement::class)->findSubscribedEventIdsByUser($user) : [];
+
         return $this->render('fil_commun/index.html.twig', [
             'discussions' => $discussions,
             'posts' => $posts,
             'evenements' => $evenements,
             'query' => $query,
+            'abonnementIds' => $abonnementIds, // Transmettre les abonnements à la vue
         ]);
     }
 }

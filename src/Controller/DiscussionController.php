@@ -164,7 +164,9 @@ class DiscussionController extends AbstractController
             ]);
             $commentForms[$post->getId()] = $commentForm->createView();
         }
-    
+        $user = $this->getUser();
+        $abonnementIds = $user ? $entityManager->getRepository(Abonnement::class)->findSubscribedEventIdsByUser($user) : [];
+        
         return $this->render('discussion/show.html.twig', [
             'discussion' => $discussion,
             'posts' => $posts,
@@ -172,6 +174,7 @@ class DiscussionController extends AbstractController
             'query' => $query,
             'postForm' => $postForm->createView(),
             'commentForms' => $commentForms,
+            'abonnementIds' => $abonnementIds, // Transmettre les IDs des abonnements à la vue
         ]);
     }
     #[Route('/evenement/{id}/abonner', name: 'abonner_evenement', methods: ['POST'])]

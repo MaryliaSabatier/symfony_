@@ -59,7 +59,7 @@
                 </form>
             </div>
 
-            <!-- Posts et événements -->
+            <!-- Posts -->
             <div class="posts-section mb-5">
                 <h2>Posts</h2>
                 {% for post in posts %}
@@ -104,6 +104,23 @@
                                 </a>
                             </p>
                         {% endif %}
+
+                        <!-- Boutons d'abonnement/désabonnement -->
+                        <div class="event-actions mt-3">
+                            {% if abonnementIds is defined and evenement.id in abonnementIds %}
+                                <!-- Bouton pour se désabonner -->
+                                <form action="{{ path('evenement_desabonner', { id: evenement.id }) }}" method="post" class="d-inline">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('desabonner_evenement_' ~ evenement.id) }}">
+                                    <button type="submit" class="btn btn-danger">Se désabonner</button>
+                                </form>
+                            {% else %}
+                                <!-- Bouton pour s'abonner -->
+                                <form action="{{ path('evenement_abonner', { id: evenement.id }) }}" method="post" class="d-inline">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('abonner_evenement_' ~ evenement.id) }}">
+                                    <button type="submit" class="btn btn-primary">S'abonner</button>
+                                </form>
+                            {% endif %}
+                        </div>
                     </div>
                 {% else %}
                     <p>Aucun événement disponible.</p>

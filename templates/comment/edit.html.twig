@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier Commentaire{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>Modifier votre commentaire</h1>
+
+    {{ form_start(form) }}
+        <div class="form-group">
+            {{ form_widget(form.contenu, {'attr': {'class': 'form-control'}}) }}
+        </div>
+        <button type="submit" class="btn btn-primary mt-2">Modifier</button>
+    {{ form_end(form) }}
+
+    <a href="{{ path('discussion_show', {'id': commentaire.post.discussion.id}) }}" class="btn btn-secondary mt-3">Annuler</a>
+</div>
+{% endblock %}

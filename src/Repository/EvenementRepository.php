@@ -16,6 +16,16 @@ class EvenementRepository extends ServiceEntityRepository
         parent::__construct($registry, Evenement::class);
     }
 
+    public function findBySearchQuery(string $query): array
+    {
+        return $this->createQueryBuilder('e')
+            ->andWhere('e.contenu LIKE :query OR e.lieu LIKE :query')
+            ->setParameter('query', '%' . $query . '%')
+            ->orderBy('e.dateDebut', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return Evenement[] Returns an array of Evenement objects
     //     */

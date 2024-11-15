@@ -3,9 +3,12 @@
 namespace App\Entity;
 
 use App\Repository\PostRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use App\Entity\Discussion;
 use App\Entity\User;
+use App\Entity\Commentaire;
 
 #[ORM\Entity(repositoryClass: PostRepository::class)]
 class Post
@@ -22,21 +25,24 @@ class Post
     private ?\DateTimeInterface $dateCreation = null;
 
     #[ORM\ManyToOne(targetEntity: Discussion::class, inversedBy: 'posts')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?Discussion $discussion = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $auteur = null;
 
+    #[ORM\OneToMany(mappedBy: 'post', targetEntity: Commentaire::class, cascade: ['persist', 'remove'])]
+    private Collection $commentaires;
+
     // Constructor
     public function __construct()
     {
-        $this->dateCreation = new \DateTime(); // Définit la date de création à maintenant par défaut
+        $this->dateCreation = new \DateTime(); // Définit la date de création par défaut
+        $this->commentaires = new ArrayCollection();
     }
 
     // Getters et Setters
-
     public function getId(): ?int
     {
         return $this->id;
@@ -86,6 +92,36 @@ class Post
     public function setAuteur(?User $auteur): self
     {
         $this->auteur = $auteur;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Commentaire>
+     */
+    public function getCommentaires(): Collection
+    {
+        return $this->commentaires;
+    }
+
+    public function addCommentaire(Commentaire $commentaire): self
+    {
+        if (!$this->commentaires->contains($commentaire)) {
+            $this->commentaires->add($commentaire);
+            $commentaire->setPost($this); // Assurez la relation inverse
+        }
+
+        return $this;
+    }
+
+    public function removeCommentaire(Commentaire $commentaire): self
+    {
+        if ($this->commentaires->removeElement($commentaire)) {
+            // Définir la relation inverse à null si nécessaire
+            if ($commentaire->getPost() === $this) {
+                $commentaire->setPost(null);
+            }
+        }
 
         return $this;
     }

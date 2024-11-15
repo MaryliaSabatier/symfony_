@@ -4,16 +4,45 @@
 
 {% block body %}
     <div class="container mt-4">
+        <!-- Messages flash -->
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+        {% for message in app.flashes('error') %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+
+        <!-- Bouton pour revenir au Fil Commun -->
         <a href="{{ path('fil_commun') }}" class="btn btn-secondary mb-3">← Retour au Fil Commun</a>
 
-        <h1>{{ discussion.nom }}</h1>
-        <p>Cette discussion a été créée par {{ discussion.auteur.nomUtilisateur }}.</p>
+        <!-- Titre de la discussion -->
+        <h1 class="mb-3">{{ discussion.nom }}</h1>
+        <p><strong>Créé par :</strong> {{ discussion.auteur.nomUtilisateur }}</p>
 
-        <!-- Section des événements associés à la discussion -->
+        <!-- Barre de recherche -->
+        <div class="search-bar mb-4">
+            <form method="get" action="{{ path('discussion_show', { id: discussion.id }) }}" class="d-flex">
+                <input 
+                    type="text" 
+                    name="q" 
+                    class="form-control" 
+                    placeholder="Rechercher dans la discussion..." 
+                    value="{{ query|default('') }}">
+                <button type="submit" class="btn btn-primary ml-2">Rechercher</button>
+            </form>
+        </div>
+
+        <!-- Section des événements associés -->
         <div class="discussion-events mt-4">
             <h2>Événements associés</h2>
-            {% if discussion.evenements is not empty %}
-                {% for evenement in discussion.evenements %}
+            {% if evenements|length > 0 %}
+                {% for evenement in evenements %}
                     <div class="event-item mb-3 p-3 border rounded">
                         <h3>{{ evenement.contenu }}</h3>
                         <p><strong>Lieu :</strong> {{ evenement.lieu }}</p>
@@ -22,32 +51,84 @@
                     </div>
                 {% endfor %}
             {% else %}
-                <p>Aucun événement associé à cette discussion.</p>
+                <p>Aucun événement ne correspond à votre recherche.</p>
             {% endif %}
         </div>
 
         <!-- Section des messages de la discussion -->
         <div class="discussion-posts mt-4">
             <h2>Messages dans cette discussion</h2>
-            {% for post in discussion.posts %}
-                <div class="post mb-3 p-3 border rounded">
-                    <strong>{{ post.auteur.nomUtilisateur }}</strong> : {{ post.contenu }}
-                    <p><small>Posté le {{ post.dateCreation|date('d/m/Y') }}</small></p>
-                </div>
+            {% if posts|length > 0 %}
+                {% for post in posts %}
+                    <div class="post mb-3 p-3 border rounded">
+                        <strong>{{ post.auteur.nomUtilisateur }}</strong> : {{ post.contenu }}
+                        <p><small>Posté le {{ post.dateCreation|date('d/m/Y H:i') }}</small></p>
+
+                        <!-- Section des commentaires -->
+                        {% if post.commentaires|length > 0 %}
+                            <div class="comments mt-3">
+                                <h5>Commentaires :</h5>
+                                {% for commentaire in post.commentaires %}
+                                    <div class="comment mb-2 p-2 border rounded">
+                                        <strong>{{ commentaire.auteur.nomUtilisateur }}</strong> : {{ commentaire.contenu }}
+                                        <p><small>Posté le {{ commentaire.dateCreation|date('d/m/Y H:i') }}</small></p>
+
+                                        <!-- Boutons de modification/suppression pour les commentaires -->
+                                        {% if commentaire.auteur == app.user %}
+                                            <div class="comment-actions mt-2">
+                                                <a href="{{ path('edit_comment', { id: commentaire.id }) }}" class="btn btn-sm btn-warning">Modifier</a>
+                                                <form action="{{ path('delete_comment', { id: commentaire.id }) }}" method="post" class="d-inline">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_comment_' ~ commentaire.id) }}">
+                                                    <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+                                                </form>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <!-- Formulaire pour ajouter un commentaire -->
+                        <div class="add-comment mt-3">
+                            <h5>Ajouter un commentaire</h5>
+                            {% if commentForms[post.id] is defined %}
+                                {{ form_start(commentForms[post.id]) }}
+                                    <div class="form-group">
+                                        {{ form_widget(commentForms[post.id].contenu, {'attr': {'class': 'form-control', 'placeholder': 'Écrivez votre commentaire ici...'}}) }}
+                                    </div>
+                                    <button type="submit" class="btn btn-primary mt-2">Ajouter</button>
+                                {{ form_end(commentForms[post.id]) }}
+                            {% else %}
+                                <p>Impossible de commenter ce post.</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Boutons de modification/suppression pour les posts -->
+                        {% if post.auteur == app.user %}
+                            <div class="post-actions mt-3">
+                                <a href="{{ path('edit_post', { id: post.id }) }}" class="btn btn-warning btn-sm">Modifier</a>
+                                <form action="{{ path('delete_post', { id: post.id }) }}" method="post" class="d-inline">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_post' ~ post.id) }}">
+                                    <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+                                </form>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
             {% else %}
-                <p>Aucun message dans cette discussion.</p>
-            {% endfor %}
+                <p>Aucun message ne correspond à votre recherche.</p>
+            {% endif %}
         </div>
 
         <!-- Formulaire pour ajouter un nouveau message -->
         <div class="add-post mt-4">
             <h3>Ajouter un message</h3>
             {{ form_start(postForm) }}
-                {{ form_widget(postForm) }}
-                <button type="submit" class="btn btn-primary">Ajouter</button>
+                <div class="form-group">
+                    {{ form_widget(postForm.contenu, {'attr': {'class': 'form-control', 'placeholder': 'Écrivez votre message ici...'}}) }}
+                </div>
+                <button type="submit" class="btn btn-primary mt-2">Ajouter</button>
             {{ form_end(postForm) }}
         </div>
-
-        <a href="{{ path('discussion_list') }}" class="btn btn-secondary mt-3">Retour à la liste des discussions</a>
     </div>
 {% endblock %}

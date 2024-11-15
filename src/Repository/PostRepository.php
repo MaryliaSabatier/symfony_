@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Post;
+use App\Entity\Discussion;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -16,28 +17,69 @@ class PostRepository extends ServiceEntityRepository
         parent::__construct($registry, Post::class);
     }
 
-    //    /**
-    //     * @return Post[] Returns an array of Post objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('p')
-    //            ->andWhere('p.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('p.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    /**
+     * Recherche des posts en fonction d'un mot-clé
+     *
+     * @param string $query Le mot-clé à rechercher
+     * @return Post[] Retourne un tableau d'objets Post correspondant au mot-clé
+     */
+    public function findBySearchQuery(string $query): array
+    {
+        return $this->createQueryBuilder('p')
+            ->leftJoin('p.commentaires', 'c') // Inclure les commentaires associés
+            ->addSelect('c')
+            ->where('p.contenu LIKE :query')
+            ->setParameter('query', '%' . $query . '%')
+            ->orderBy('p.dateCreation', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 
-    //    public function findOneBySomeField($value): ?Post
-    //    {
-    //        return $this->createQueryBuilder('p')
-    //            ->andWhere('p.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+    /**
+     * Trouve les derniers posts publiés
+     *
+     * @param int $limit Le nombre maximum de posts à récupérer
+     * @return Post[] Retourne un tableau des derniers objets Post
+     */
+    public function findLatest(int $limit = 10): array
+    {
+        return $this->createQueryBuilder('p')
+            ->orderBy('p.dateCreation', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Récupère tous les posts avec leurs commentaires associés
+     *
+     * @return Post[] Retourne un tableau de posts avec leurs commentaires
+     */
+    public function findAllWithComments(): array
+    {
+        return $this->createQueryBuilder('p')
+            ->leftJoin('p.commentaires', 'c') // Inclure les commentaires associés
+            ->addSelect('c')
+            ->orderBy('p.dateCreation', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Recherche des posts liés à une discussion spécifique et contenant un mot-clé
+     *
+     * @param Discussion $discussion La discussion associée
+     * @param string $query Le mot-clé à rechercher
+     * @return Post[] Retourne un tableau des posts correspondants
+     */public function findByDiscussionAndQuery(Discussion $discussion, string $query): array
+    {
+    return $this->createQueryBuilder('p')
+        ->andWhere('p.discussion = :discussion')
+        ->andWhere('p.contenu LIKE :query')
+        ->setParameter('discussion', $discussion)
+        ->setParameter('query', '%' . $query . '%')
+        ->orderBy('p.dateCreation', 'DESC')
+        ->getQuery()
+        ->getResult();
+    }
 }

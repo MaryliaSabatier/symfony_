@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier le Post{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>Modifier votre message</h1>
+
+    {{ form_start(form) }}
+        <div class="form-group">
+            {{ form_widget(form.contenu, {'attr': {'class': 'form-control', 'placeholder': 'Modifiez votre message ici...'}}) }}
+        </div>
+        <button type="submit" class="btn btn-primary mt-2">Enregistrer</button>
+    {{ form_end(form) }}
+
+    <a href="{{ path('discussion_show', {'id': post.discussion.id}) }}" class="btn btn-secondary mt-3">Retour à la discussion</a>
+</div>
+{% endblock %}

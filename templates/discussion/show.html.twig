@@ -21,10 +21,21 @@
         <!-- Bouton pour revenir au Fil Commun -->
         <a href="{{ path('fil_commun') }}" class="btn btn-secondary mb-3">← Retour au Fil Commun</a>
 
-        <!-- Titre de la discussion -->
-        <h1 class="mb-3">{{ discussion.nom }}</h1>
-        <p><strong>Créé par :</strong> {{ discussion.auteur.nomUtilisateur }}</p>
+ <!-- Titre de la discussion -->
+<h1 class="mb-3">{{ discussion.nom }}</h1>
+<p><strong>Créé par :</strong> {{ discussion.auteur.nomUtilisateur }}</p>
 
+<!-- Bouton d'abonnement/désabonnement -->
+<div class="mb-4 d-flex justify-content-end">
+    <form method="post" action="{{ isSubscribed ? path('discussion_desabonner', { id: discussion.id }) : path('discussion_abonner', { id: discussion.id }) }}">
+        <input type="hidden" name="_token" value="{{ csrf_token(isSubscribed ? 'desabonner_discussion_' ~ discussion.id : 'abonner_discussion_' ~ discussion.id) }}">
+        {% if isSubscribed %}
+            <button type="submit" class="btn btn-danger">Se désabonner</button>
+        {% else %}
+            <button type="submit" class="btn btn-success">S'abonner</button>
+        {% endif %}
+    </form>
+</div>
         <!-- Barre de recherche -->
         <div class="search-bar mb-4">
             <form method="get" action="{{ path('discussion_show', { id: discussion.id }) }}" class="d-flex">
@@ -90,16 +101,16 @@
                                         <strong>{{ commentaire.auteur.nomUtilisateur }}</strong> : {{ commentaire.contenu }}
                                         <p><small>Posté le {{ commentaire.dateCreation|date('d/m/Y H:i') }}</small></p>
 
-                                        <!-- Boutons de modification/suppression pour les commentaires -->
-                                        {% if commentaire.auteur == app.user %}
-                                            <div class="comment-actions mt-2">
-                                                <a href="{{ path('edit_comment', { id: commentaire.id }) }}" class="btn btn-sm btn-warning">Modifier</a>
-                                                <form action="{{ path('delete_comment', { id: commentaire.id }) }}" method="post" class="d-inline">
-                                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_comment_' ~ commentaire.id) }}">
-                                                    <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
-                                                </form>
-                                            </div>
-                                        {% endif %}
+<!-- Boutons de modification/suppression pour les commentaires -->
+{% if commentaire.auteur == app.user or is_granted('ROLE_ADMIN') %}
+    <div class="comment-actions mt-2">
+        <a href="{{ path('edit_comment', { id: commentaire.id }) }}" class="btn btn-sm btn-warning">Modifier</a>
+        <form action="{{ path('delete_comment', { id: commentaire.id }) }}" method="post" class="d-inline">
+            <input type="hidden" name="_token" value="{{ csrf_token('delete_comment_' ~ commentaire.id) }}">
+            <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+        </form>
+    </div>
+{% endif %}
                                     </div>
                                 {% endfor %}
                             </div>
@@ -120,16 +131,16 @@
                             {% endif %}
                         </div>
 
-                        <!-- Boutons de modification/suppression pour les posts -->
-                        {% if post.auteur == app.user %}
-                            <div class="post-actions mt-3">
-                                <a href="{{ path('edit_post', { id: post.id }) }}" class="btn btn-warning btn-sm">Modifier</a>
-                                <form action="{{ path('delete_post', { id: post.id }) }}" method="post" class="d-inline">
-                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_post' ~ post.id) }}">
-                                    <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
-                                </form>
-                            </div>
-                        {% endif %}
+<!-- Boutons de modification/suppression pour les posts -->
+{% if post.auteur == app.user or is_granted('ROLE_ADMIN') %}
+    <div class="post-actions mt-3">
+        <a href="{{ path('edit_post', { id: post.id }) }}" class="btn btn-warning btn-sm">Modifier</a>
+        <form action="{{ path('delete_post', { id: post.id }) }}" method="post" class="d-inline">
+            <input type="hidden" name="_token" value="{{ csrf_token('delete_post' ~ post.id) }}">
+            <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+        </form>
+    </div>
+{% endif %}
                     </div>
                 {% endfor %}
             {% else %}

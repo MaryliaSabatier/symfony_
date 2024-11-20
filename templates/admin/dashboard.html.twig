@@ -5,16 +5,19 @@
 {% block title %}Tableau de bord Admin{% endblock %}
 
 {% block body %}
-    <h1>Bienvenue dans le tableau de bord administrateur</h1>
+    <div class="container mt-4">
+        <h1 class="mb-4">Bienvenue dans le tableau de bord administrateur</h1>
 
-    <div class="buttons">
-        <a href="{{ path('admin_user_management') }}" class="btn btn-primary">Gestion des utilisateurs</a>
-        <a href="{{ path('admin_event_management') }}" class="btn btn-primary">Gestion des événements</a>
-        <!-- Lien vers la gestion des discussions -->
-        <a href="{{ path('admin_discussion_list') }}" class="btn btn-primary">Gestion des discussions</a>
-    </div>
+        <div class="buttons d-flex flex-column gap-3">
+            <a href="{{ path('admin_user_management') }}" class="btn btn-primary">Gestion des utilisateurs</a>
+            <a href="{{ path('admin_event_management') }}" class="btn btn-primary">Gestion des événements</a>
+            <a href="{{ path('admin_discussion_list') }}" class="btn btn-primary">Gestion des discussions</a>
+            <!-- Nouveau bouton vers le Fil Commun -->
+            <a href="{{ path('fil_commun') }}" class="btn btn-secondary">Accéder au Fil Commun</a>
+        </div>
 
-    <div class="logout">
-        <a href="{{ path('app_logout') }}" class="btn btn-danger">Se déconnecter</a>
+        <div class="logout mt-4">
+            <a href="{{ path('app_logout') }}" class="btn btn-danger">Se déconnecter</a>
+        </div>
     </div>
 {% endblock %}

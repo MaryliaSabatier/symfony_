@@ -46,6 +46,13 @@
         <div class="col-md-10 col-9 content bg-light p-4">
             <h2 class="mb-4">Fil Commun</h2>
 
+            <!-- Bouton retour au panneau d'administration pour les admins -->
+            {% if is_granted('ROLE_ADMIN') %}
+                <div class="mb-4">
+                    <a href="{{ path('admin_dashboard') }}" class="btn btn-warning">Revenir au Panneau d'Administration</a>
+                </div>
+            {% endif %}
+
             <!-- Section de recherche -->
             <div class="search-bar mb-4">
                 <form method="get" action="{{ path('fil_commun') }}" class="d-flex">

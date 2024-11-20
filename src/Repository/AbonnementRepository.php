@@ -10,6 +10,11 @@ use Doctrine\Persistence\ManagerRegistry;
 
 /**
  * @extends ServiceEntityRepository<Abonnement>
+ *
+ * @method Abonnement|null find($id, $lockMode = null, $lockVersion = null)
+ * @method Abonnement|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Abonnement[]    findAll()
+ * @method Abonnement[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
 class AbonnementRepository extends ServiceEntityRepository
 {
@@ -69,5 +74,44 @@ class AbonnementRepository extends ServiceEntityRepository
             ->getResult();
 
         return array_column($result, 'evenementId');
+    }
+
+    /**
+     * Récupérer les abonnements d'un utilisateur pour une discussion spécifique.
+     *
+     * @param User $user
+     * @param int $discussionId
+     * @return Abonnement[] Liste des abonnements pour une discussion
+     */
+    public function findByUserAndDiscussion(User $user, int $discussionId): array
+    {
+        return $this->createQueryBuilder('a')
+            ->join('a.evenement', 'e')
+            ->andWhere('a.user = :user')
+            ->andWhere('e.discussion = :discussionId')
+            ->setParameter('user', $user)
+            ->setParameter('discussionId', $discussionId)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Vérifier si un utilisateur est abonné à une discussion.
+     *
+     * @param User $user
+     * @param int $discussionId
+     * @return bool
+     */
+    public function isUserSubscribedToDiscussion(User $user, int $discussionId): bool
+    {
+        return (bool) $this->createQueryBuilder('a')
+            ->select('count(a.id)')
+            ->join('a.evenement', 'e')
+            ->andWhere('a.user = :user')
+            ->andWhere('e.discussion = :discussionId')
+            ->setParameter('user', $user)
+            ->setParameter('discussionId', $discussionId)
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 }

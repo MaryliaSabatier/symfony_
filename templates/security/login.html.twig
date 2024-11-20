@@ -5,7 +5,7 @@
 {% block body %}
 <div class="d-flex justify-content-center align-items-center vh-100 bg-light">
     <div class="card shadow p-4" style="width: 100%; max-width: 400px; border-radius: 10px;">
-        <h1 class="text-center mb-4">Veuillez vous connecter</h1>
+        <h1 class="text-center mb-4">Alhambra</h1>
 
         {% if error %}
             <div class="alert alert-danger">
@@ -33,6 +33,12 @@
 
             <button type="submit" class="btn btn-primary w-100">Connexion</button>
         </form>
+
+        <!-- Ajouter le bouton pour l'inscription -->
+        <div class="text-center mt-3">
+            <p>Pas encore inscrit ?</p>
+            <a href="{{ path('app_register') }}" class="btn btn-outline-primary w-100">Créer un compte</a>
+        </div>
     </div>
 </div>
 {% endblock %}

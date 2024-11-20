@@ -3,35 +3,57 @@
 {% block title %}Liste des discussions{% endblock %}
 
 {% block body %}
-    <h1>Liste des discussions</h1>
+    <div class="container mt-4">
+        <h1 class="mb-4">Liste des discussions</h1>
 
-    <!-- Affichage de la liste des discussions -->
-    <div class="row">
-        <div class="col-3">
-            <ul class="list-group">
-                {% for discussion in discussions %}
-                    <li class="list-group-item">
-                        <a href="{{ path('discussion_show', { id: discussion.id }) }}">{{ discussion.nom }}</a>
-                    </li>
-                {% else %}
-                    <li class="list-group-item">Aucune discussion trouvée.</li>
-                {% endfor %}
-            </ul>
-        </div>
+        <!-- Affichage de la liste des discussions avec gestion de l'abonnement -->
+        <div class="row">
+            <div class="col-3">
+<ul class="list-group">
+    {% for discussion in discussions %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <a href="{{ path('discussion_show', { id: discussion.id }) }}">
+                <i class="fas fa-comments"></i> {{ discussion.nom }}
+            </a>
+            {% if abonnementIds is defined and discussion.id in abonnementIds %}
+                <!-- Bouton de désabonnement -->
+                <form action="{{ path('discussion_desabonner', { id: discussion.id }) }}" method="post" class="d-inline">
+                    <input type="hidden" name="_token" value="{{ csrf_token('desabonner_discussion_' ~ discussion.id) }}">
+                    <button type="submit" class="btn btn-danger btn-sm">
+                        <i class="fas fa-times"></i> Désabonner
+                    </button>
+                </form>
+            {% else %}
+                <!-- Bouton d'abonnement -->
+                <form action="{{ path('discussion_abonner', { id: discussion.id }) }}" method="post" class="d-inline">
+                    <input type="hidden" name="_token" value="{{ csrf_token('abonner_discussion_' ~ discussion.id) }}">
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="fas fa-plus"></i> S'abonner
+                    </button>
+                </form>
+            {% endif %}
+        </li>
+    {% else %}
+        <li class="list-group-item">Aucune discussion trouvée.</li>
+    {% endfor %}
+</ul>
 
-        <div class="col-9">
-            <!-- Contenu des discussions à droite -->
-            <div class="discussion-content">
-                <h2>Contenu de la discussion</h2>
-                <!-- Ajoutez ici le contenu spécifique de la discussion -->
+            </div>
+
+            <!-- Section de contenu à droite -->
+            <div class="col-9">
+                <div class="discussion-content">
+                    <h2>Contenu des discussions</h2>
+                    <p>Sélectionnez une discussion pour afficher son contenu.</p>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Bouton de déconnexion visible uniquement si l'utilisateur est connecté -->
-    {% if app.user %}
-        <div class="logout mt-4">
-            <a href="{{ path('app_logout') }}" class="btn btn-danger">Déconnexion</a>
-        </div>
-    {% endif %}
+        <!-- Bouton de déconnexion visible uniquement si l'utilisateur est connecté -->
+        {% if app.user %}
+            <div class="logout mt-4">
+                <a href="{{ path('app_logout') }}" class="btn btn-danger">Déconnexion</a>
+            </div>
+        {% endif %}
+    </div>
 {% endblock %}

@@ -6,6 +6,7 @@ use App\Entity\Discussion;
 use App\Entity\Post;
 use App\Entity\Commentaire;
 use App\Entity\Evenement;
+use App\Entity\Notification;
 use App\Entity\Abonnement;
 use App\Form\DiscussionType;
 use App\Form\PostType;
@@ -13,6 +14,7 @@ use App\Form\CommentaireType;
 use App\Repository\DiscussionRepository;
 use App\Repository\EvenementRepository;
 use App\Repository\PostRepository;
+use App\Repository\NotificationRepository;
 use App\Repository\AbonnementRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -125,14 +127,14 @@ class DiscussionController extends AbstractController
                 ->getQuery()
                 ->getResult()
             : $evenementRepository->findBy(['discussion' => $discussion], ['dateCreation' => 'DESC']);
-        
-            // Recherche des abonnements pour l'utilisateur connecté
+    
+        // Recherche des abonnements pour l'utilisateur connecté
         $user = $this->getUser();
         $abonnementIds = $user 
             ? $abonnementRepository->findSubscribedEventIdsByUser($user)
             : [];   
-        
-            // Recherche des posts correspondant au terme
+    
+        // Recherche des posts correspondant au terme
         $posts = $query
             ? $postRepository->findByDiscussionAndQuery($discussion, $query)
             : $postRepository->findBy(['discussion' => $discussion], ['dateCreation' => 'DESC']);
@@ -147,6 +149,17 @@ class DiscussionController extends AbstractController
     
         if ($postForm->isSubmitted() && $postForm->isValid()) {
             $entityManager->persist($post);
+    
+            // Envoyer des notifications aux abonnés de la discussion
+            $abonnements = $abonnementRepository->findBy(['evenement' => $discussion->getEvenements()]);
+            foreach ($abonnements as $abonnement) {
+                $notification = new Notification();
+                $notification->setUser($abonnement->getUser());
+                $notification->setMessage(sprintf("Nouveau post ajouté dans la discussion : %s", $discussion->getNom()));
+                $notification->setCreatedAt(new \DateTime());
+                $entityManager->persist($notification);
+            }
+    
             $entityManager->flush();
     
             $this->addFlash('success', 'Message ajouté avec succès.');
@@ -164,9 +177,7 @@ class DiscussionController extends AbstractController
             ]);
             $commentForms[$post->getId()] = $commentForm->createView();
         }
-        $user = $this->getUser();
-        $abonnementIds = $user ? $entityManager->getRepository(Abonnement::class)->findSubscribedEventIdsByUser($user) : [];
-        
+    
         return $this->render('discussion/show.html.twig', [
             'discussion' => $discussion,
             'posts' => $posts,
@@ -177,6 +188,8 @@ class DiscussionController extends AbstractController
             'abonnementIds' => $abonnementIds, // Transmettre les IDs des abonnements à la vue
         ]);
     }
+    
+
     #[Route('/evenement/{id}/abonner', name: 'abonner_evenement', methods: ['POST'])]
     public function abonnerEvenement(Evenement $evenement, EntityManagerInterface $entityManager): Response
     {
@@ -351,5 +364,56 @@ public function deleteComment(
     return $this->redirectToRoute('discussion_show', ['id' => $commentaire->getPost()->getDiscussion()->getId()]);
 }
 
+public function addEvent(
+    Request $request,
+    Discussion $discussion,
+    EntityManagerInterface $entityManager,
+    AbonnementRepository $abonnementRepository
+): Response {
+    $evenement = new Evenement();
+    $form = $this->createForm(EvenementType::class, $evenement);
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+        $evenement->setDiscussion($discussion);
+        $entityManager->persist($evenement);
+
+        // Envoyer des notifications aux abonnés de la discussion
+        $abonnements = $abonnementRepository->findBy(['evenement' => $discussion->getEvenements()]);
+        foreach ($abonnements as $abonnement) {
+            $notification = new Notification();
+            $notification->setUser($abonnement->getUser());
+            $notification->setMessage(sprintf("Nouvel événement ajouté dans la discussion : %s", $discussion->getNom()));
+            $notification->setCreatedAt(new \DateTime());
+            $entityManager->persist($notification);
+        }
+
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Événement ajouté avec succès.');
+        return $this->redirectToRoute('discussion_show', ['id' => $discussion->getId()]);
+    }
+
+    return $this->render('event/add.html.twig', [
+        'form' => $form->createView(),
+    ]);
+}
+#[Route('/notifications/{id}/read', name: 'mark_notification_as_read', methods: ['POST'])]
+public function markAsRead(
+    Notification $notification,
+    EntityManagerInterface $entityManager
+): Response {
+    $user = $this->getUser();
+
+    if ($notification->getUser() !== $user) {
+        throw $this->createAccessDeniedException('Cette notification ne vous appartient pas.');
+    }
+
+    $notification->setIsRead(true);
+    $entityManager->flush();
+
+    $this->addFlash('success', 'Notification marquée comme lue.');
+    return $this->redirectToRoute('user_notifications');
+}
 
 }

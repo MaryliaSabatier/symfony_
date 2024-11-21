@@ -5,56 +5,26 @@
 {% block body %}
 <div class="container mt-4">
     <h1>Bienvenue dans le tableau de bord du Modérateur</h1>
+
     <!-- Bouton de déconnexion -->
-    <div class="text-end mb-4">
-        <a href="{{ path('app_logout') }}" class="btn btn-danger">Déconnexion</a>
+    <div class="mb-4">
+        <a href="{{ path('app_logout') }}" class="btn btn-danger w-100">Déconnexion</a>
     </div>
 
-        <!-- Bouton pour accéder à la gestion des événements temporaires -->
-    <div class="mt-4 mb-4">
-        <a href="{{ path('moderator_manage_events') }}" class="btn btn-info">Gestion des événements temporaires</a>
+    <!-- Bouton pour accéder au Fil Commun -->
+    <div class="mb-4">
+        <a href="{{ path('fil_commun') }}" class="btn btn-primary w-100">Accéder au Fil Commun</a>
+    </div>
+
+    <!-- Bouton pour accéder à la gestion des événements temporaires -->
+    <div class="mb-4">
+        <a href="{{ path('moderator_manage_events') }}" class="btn btn-info w-100">Gestion des événements temporaires</a>
     </div>
 
     <!-- Bouton pour accéder à la gestion des discussions -->
-    <div class="mt-4 mb-4">
-        <a href="{{ path('moderator_manage_discussions') }}" class="btn btn-info">Gestion des discussions</a>
+    <div class="mb-4">
+        <a href="{{ path('fil_commun') }}" class="btn btn-info w-100">Accéder au Fil Commun</a>
     </div>
 
-    <div class="row mt-4">
-        <!-- Section des discussions à modérer -->
-        <div class="col-md-6">
-            <h2>Discussions à modérer</h2>
-            <p>Ici, vous pouvez voir et gérer les discussions nécessitant votre attention.</p>
-            <!-- Ajouter une liste de discussions nécessitant une modération -->
-            <ul>
-                <!-- Exemple d'élément de discussion -->
-                <li>Discussion 1 - Signalée par un utilisateur</li>
-                <li>Discussion 2 - Messages non appropriés</li>
-                <!-- ... -->
-            </ul>
-        </div>
-
-        <!-- Section des utilisateurs récents ou signalés -->
-        <div class="col-md-6">
-            <h2>Signalements récents</h2>
-            <p>Gérez les signalements faits par les utilisateurs.</p>
-            <!-- Ajouter une liste des signalements -->
-            <ul>
-                <!-- Exemple d'élément de signalement -->
-                <li>Utilisateur X a signalé un message inapproprié</li>
-                <li>Utilisateur Y a besoin d'une assistance pour un événement</li>
-                <!-- ... -->
-            </ul>
-        </div>
-    </div>
-
-    <!-- Autres sections pour les modérateurs -->
-    <div class="row mt-4">
-        <div class="col-md-12">
-            <h2>Statistiques et Activités Récentes</h2>
-            <p>Surveillez les activités récentes dans les différentes commissions.</p>
-            <!-- Afficher des statistiques ou des graphiques si besoin -->
-        </div>
-    </div>
 </div>
 {% endblock %}

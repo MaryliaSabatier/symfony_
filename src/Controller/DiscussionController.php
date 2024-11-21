@@ -511,6 +511,25 @@ public function deletePostAsAdmin(Post $post, EntityManagerInterface $entityMana
 }
 
 /**
+ * Supprimer un post en tant qu'administrateur ou modérateur.
+ */
+#[Route('/moderator/post/{id}/delete', name: 'moderator_delete_post', methods: ['POST'])]
+public function deletePostAsModerator(Post $post, EntityManagerInterface $entityManager): Response
+{
+    $this->denyAccessUnlessGranted('ROLE_MODERATOR');
+
+    $discussionId = $post->getDiscussion()->getId(); // Obtenez l'ID de la discussion pour redirection
+
+    // Supprimez le post
+    $entityManager->remove($post);
+    $entityManager->flush();
+
+    $this->addFlash('success', 'Post supprimé avec succès.');
+
+    return $this->redirectToRoute('discussion_show', ['id' => $discussionId]);
+}
+
+/**
  * Supprimer un commentaire en tant qu'administrateur.
  */
 #[Route('/admin/comment/{id}/delete', name: 'admin_delete_comment', methods: ['POST'])]
@@ -518,6 +537,24 @@ public function deleteCommentAsAdmin(Commentaire $commentaire, EntityManagerInte
 {
     // Vérifiez que l'utilisateur a le rôle ADMIN
     $this->denyAccessUnlessGranted('ROLE_ADMIN');
+
+    $discussionId = $commentaire->getPost()->getDiscussion()->getId(); // Obtenez l'ID de la discussion pour redirection
+
+    // Supprimez le commentaire
+    $entityManager->remove($commentaire);
+    $entityManager->flush();
+
+    $this->addFlash('success', 'Commentaire supprimé avec succès.');
+
+    return $this->redirectToRoute('discussion_show', ['id' => $discussionId]);
+}
+/**
+ * Supprimer un commentaire en tant qu'administrateur ou modérateur.
+ */
+#[Route('/moderator/comment/{id}/delete', name: 'moderator_delete_comment', methods: ['POST'])]
+public function deleteCommentAsModerator(Commentaire $commentaire, EntityManagerInterface $entityManager): Response
+{
+    $this->denyAccessUnlessGranted('ROLE_MODERATOR');
 
     $discussionId = $commentaire->getPost()->getDiscussion()->getId(); // Obtenez l'ID de la discussion pour redirection
 

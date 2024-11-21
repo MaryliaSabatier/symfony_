@@ -53,6 +53,13 @@
                 </div>
             {% endif %}
 
+            <!-- Bouton retour au panneau de modération pour les modérateurs -->
+            {% if is_granted('ROLE_MODERATOR') %}
+                <div class="mb-4">
+                    <a href="{{ path('moderator_dashboard') }}" class="btn btn-warning">Revenir au Panneau de Modération</a>
+                </div>
+            {% endif %}
+            
             <!-- Section de recherche -->
             <div class="search-bar mb-4">
                 <form method="get" action="{{ path('fil_commun') }}" class="d-flex">
@@ -75,6 +82,16 @@
                         <p>{{ post.contenu }}</p>
                         <p class="text-muted"><small>Posté le {{ post.dateCreation|date('d/m/Y H:i') }}</small></p>
 
+                        <!-- Boutons de suppression pour les admins -->
+                        {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MODERATOR') %}
+                            <div class="post-actions mt-2">
+                                <form action="{{ path('admin_delete_post', { id: post.id }) }}" method="post" class="d-inline">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_post_' ~ post.id) }}">
+                                    <button type="submit" class="btn btn-danger btn-sm">Supprimer ce post</button>
+                                </form>
+                            </div>
+                        {% endif %}
+
                         <!-- Commentaires associés -->
                         {% if post.commentaires|length > 0 %}
                             <div class="comments mt-3">
@@ -83,6 +100,16 @@
                                     <div class="comment mb-2 p-2 border rounded">
                                         <strong>{{ commentaire.auteur.nomUtilisateur }}</strong> : {{ commentaire.contenu }}
                                         <p class="text-muted"><small>Posté le {{ commentaire.dateCreation|date('d/m/Y H:i') }}</small></p>
+
+                                        <!-- Boutons de suppression pour les admins -->
+                                        {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MODERATOR') %}
+                                            <div class="comment-actions mt-2">
+                                                <form action="{{ path('admin_delete_comment', { id: commentaire.id }) }}" method="post" class="d-inline">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_comment_' ~ commentaire.id) }}">
+                                                    <button type="submit" class="btn btn-danger btn-sm">Supprimer ce commentaire</button>
+                                                </form>
+                                            </div>
+                                        {% endif %}
                                     </div>
                                 {% endfor %}
                             </div>

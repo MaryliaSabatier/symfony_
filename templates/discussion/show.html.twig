@@ -101,16 +101,16 @@
                                         <strong>{{ commentaire.auteur.nomUtilisateur }}</strong> : {{ commentaire.contenu }}
                                         <p><small>Posté le {{ commentaire.dateCreation|date('d/m/Y H:i') }}</small></p>
 
-<!-- Boutons de modification/suppression pour les commentaires -->
-{% if commentaire.auteur == app.user or is_granted('ROLE_ADMIN') %}
-    <div class="comment-actions mt-2">
-        <a href="{{ path('edit_comment', { id: commentaire.id }) }}" class="btn btn-sm btn-warning">Modifier</a>
-        <form action="{{ path('delete_comment', { id: commentaire.id }) }}" method="post" class="d-inline">
-            <input type="hidden" name="_token" value="{{ csrf_token('delete_comment_' ~ commentaire.id) }}">
-            <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
-        </form>
-    </div>
-{% endif %}
+                                <!-- Boutons de modification/suppression pour les commentaires -->
+                                {% if commentaire.auteur == app.user or is_granted('ROLE_ADMIN') or is_granted('ROLE_MODERATOR') %}
+                                    <div class="comment-actions mt-2">
+                                        <a href="{{ path('edit_comment', { id: commentaire.id }) }}" class="btn btn-sm btn-warning">Modifier</a>
+                                        <form action="{{ path('delete_comment', { id: commentaire.id }) }}" method="post" class="d-inline">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete_comment_' ~ commentaire.id) }}">
+                                            <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+                                        </form>
+                                    </div>
+                                {% endif %}
                                     </div>
                                 {% endfor %}
                             </div>
@@ -131,16 +131,16 @@
                             {% endif %}
                         </div>
 
-<!-- Boutons de modification/suppression pour les posts -->
-{% if post.auteur == app.user or is_granted('ROLE_ADMIN') %}
-    <div class="post-actions mt-3">
-        <a href="{{ path('edit_post', { id: post.id }) }}" class="btn btn-warning btn-sm">Modifier</a>
-        <form action="{{ path('delete_post', { id: post.id }) }}" method="post" class="d-inline">
-            <input type="hidden" name="_token" value="{{ csrf_token('delete_post' ~ post.id) }}">
-            <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
-        </form>
-    </div>
-{% endif %}
+                    <!-- Boutons de modification/suppression pour les posts -->
+                    {% if post.auteur == app.user or is_granted('ROLE_ADMIN') or is_granted('ROLE_MODERATOR') %}
+                        <div class="post-actions mt-3">
+                            <a href="{{ path('edit_post', { id: post.id }) }}" class="btn btn-warning btn-sm">Modifier</a>
+                            <form action="{{ path('delete_post', { id: post.id }) }}" method="post" class="d-inline">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete_post' ~ post.id) }}">
+                                <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+                            </form>
+                        </div>
+                    {% endif %}
                     </div>
                 {% endfor %}
             {% else %}

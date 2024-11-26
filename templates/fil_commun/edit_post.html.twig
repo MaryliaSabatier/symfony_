@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier le Post{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h2>Modifier le Post</h2>
+
+    {{ form_start(form) }}
+        <div class="form-group">
+            {{ form_label(form.contenu) }}
+            {{ form_widget(form.contenu, {'attr': {'class': 'form-control', 'placeholder': 'Modifiez votre message ici...'}}) }}
+        </div>
+        <button type="submit" class="btn btn-success mt-3">Enregistrer</button>
+        <a href="{{ path('fil_commun') }}" class="btn btn-secondary mt-3">Annuler</a>
+    {{ form_end(form) }}
+</div>
+{% endblock %}

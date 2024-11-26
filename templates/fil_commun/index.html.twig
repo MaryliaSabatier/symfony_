@@ -59,7 +59,7 @@
                     <a href="{{ path('moderator_dashboard') }}" class="btn btn-warning">Revenir au Panneau de Modération</a>
                 </div>
             {% endif %}
-            
+
             <!-- Section de recherche -->
             <div class="search-bar mb-4">
                 <form method="get" action="{{ path('fil_commun') }}" class="d-flex">
@@ -73,6 +73,22 @@
                 </form>
             </div>
 
+            <!-- Formulaire pour ajouter un nouveau post -->
+            <div class="add-post mb-5">
+                <h3>Ajouter un Post</h3>
+                {{ form_start(postForm) }}
+                    <div class="form-group">
+                        {{ form_label(postForm.contenu) }}
+                        {{ form_widget(postForm.contenu, {'attr': {'class': 'form-control', 'placeholder': 'Écrivez ici votre message...'}}) }}
+                    </div>
+                    <div class="form-group mt-3">
+                        {{ form_label(postForm.discussion) }}
+                        {{ form_widget(postForm.discussion, {'attr': {'class': 'form-select'}}) }}
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3">Publier</button>
+                {{ form_end(postForm) }}
+            </div>
+
             <!-- Posts -->
             <div class="posts-section mb-5">
                 <h2>Posts</h2>
@@ -82,12 +98,13 @@
                         <p>{{ post.contenu }}</p>
                         <p class="text-muted"><small>Posté le {{ post.dateCreation|date('d/m/Y H:i') }}</small></p>
 
-                        <!-- Boutons de suppression pour les admins -->
-                        {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MODERATOR') %}
+                        <!-- Boutons de modification/suppression pour les utilisateurs, admins et modérateurs -->
+                        {% if post.auteur == app.user or is_granted('ROLE_ADMIN') or is_granted('ROLE_MODERATOR') %}
                             <div class="post-actions mt-2">
-                                <form action="{{ path('admin_delete_post', { id: post.id }) }}" method="post" class="d-inline">
+                                <a href="{{ path('edit_post', { id: post.id }) }}" class="btn btn-sm btn-warning">Modifier</a>
+                                <form action="{{ path('delete_post', { id: post.id }) }}" method="post" class="d-inline">
                                     <input type="hidden" name="_token" value="{{ csrf_token('delete_post_' ~ post.id) }}">
-                                    <button type="submit" class="btn btn-danger btn-sm">Supprimer ce post</button>
+                                    <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
                                 </form>
                             </div>
                         {% endif %}
@@ -101,63 +118,36 @@
                                         <strong>{{ commentaire.auteur.nomUtilisateur }}</strong> : {{ commentaire.contenu }}
                                         <p class="text-muted"><small>Posté le {{ commentaire.dateCreation|date('d/m/Y H:i') }}</small></p>
 
-                                        <!-- Boutons de suppression pour les admins -->
-                                        {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MODERATOR') %}
+                                        <!-- Boutons de modification/suppression pour les utilisateurs, admins et modérateurs -->
+                                        {% if commentaire.auteur == app.user or is_granted('ROLE_ADMIN') or is_granted('ROLE_MODERATOR') %}
                                             <div class="comment-actions mt-2">
-                                                <form action="{{ path('admin_delete_comment', { id: commentaire.id }) }}" method="post" class="d-inline">
+                                                <a href="{{ path('edit_comment', { id: commentaire.id }) }}" class="btn btn-sm btn-warning">Modifier</a>
+                                                <form action="{{ path('delete_comment', { id: commentaire.id }) }}" method="post" class="d-inline">
                                                     <input type="hidden" name="_token" value="{{ csrf_token('delete_comment_' ~ commentaire.id) }}">
-                                                    <button type="submit" class="btn btn-danger btn-sm">Supprimer ce commentaire</button>
+                                                    <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
                                                 </form>
                                             </div>
                                         {% endif %}
                                     </div>
                                 {% endfor %}
                             </div>
-                        {% else %}
-                            <p class="text-muted">Aucun commentaire pour ce post.</p>
-                        {% endif %}
-                    </div>
-                {% else %}
-                    <p>Aucun post disponible.</p>
-                {% endfor %}
-            </div>
-
-            <!-- Événements -->
-            <div class="events-section">
-                <h2>Événements</h2>
-                {% for evenement in evenements %}
-                    <div class="event-item mb-3 p-3 border rounded">
-                        <h3>{{ evenement.contenu }}</h3>
-                        <p><strong>Lieu :</strong> {{ evenement.lieu }}</p>
-                        <p><strong>Date de début :</strong> {{ evenement.dateDebut|date('d/m/Y') }}</p>
-                        <p><strong>Date de fin :</strong> {{ evenement.dateFin|date('d/m/Y') }}</p>
-                        {% if evenement.discussion %}
-                            <p>Associé à la discussion : 
-                                <a href="{{ path('discussion_show', { id: evenement.discussion.id }) }}">
-                                    {{ evenement.discussion.nom }}
-                                </a>
-                            </p>
                         {% endif %}
 
-                        <!-- Boutons d'abonnement/désabonnement -->
-                        <div class="event-actions mt-3">
-                            {% if abonnementIds is defined and evenement.id in abonnementIds %}
-                                <!-- Bouton pour se désabonner -->
-                                <form action="{{ path('evenement_desabonner', { id: evenement.id }) }}" method="post" class="d-inline">
-                                    <input type="hidden" name="_token" value="{{ csrf_token('desabonner_evenement_' ~ evenement.id) }}">
-                                    <button type="submit" class="btn btn-danger">Se désabonner</button>
-                                </form>
-                            {% else %}
-                                <!-- Bouton pour s'abonner -->
-                                <form action="{{ path('evenement_abonner', { id: evenement.id }) }}" method="post" class="d-inline">
-                                    <input type="hidden" name="_token" value="{{ csrf_token('abonner_evenement_' ~ evenement.id) }}">
-                                    <button type="submit" class="btn btn-primary">S'abonner</button>
-                                </form>
+                        <!-- Formulaire pour ajouter un commentaire -->
+                        <div class="add-comment mt-3">
+                            <h5>Ajouter un commentaire</h5>
+                            {% if commentForms[post.id] is defined %}
+                                {{ form_start(commentForms[post.id]) }}
+                                    <div class="form-group">
+                                        {{ form_widget(commentForms[post.id].contenu, {'attr': {'class': 'form-control', 'placeholder': 'Écrivez votre commentaire ici...'}}) }}
+                                    </div>
+                                    <button type="submit" class="btn btn-primary mt-2">Ajouter</button>
+                                {{ form_end(commentForms[post.id]) }}
                             {% endif %}
                         </div>
                     </div>
                 {% else %}
-                    <p>Aucun événement disponible.</p>
+                    <p>Aucun post disponible.</p>
                 {% endfor %}
             </div>
         </div>

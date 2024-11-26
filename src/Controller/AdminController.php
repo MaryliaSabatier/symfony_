@@ -3,8 +3,11 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Entity\Discussion;
 use App\Form\UserType;
 use App\Form\UserCreateType;
+use App\Form\DiscussionType;
+use App\Repository\DiscussionRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -127,4 +130,79 @@ class AdminController extends AbstractController
 
         return $this->redirectToRoute('admin_user_management');
     }
+
+    #[Route('/admin/discussions-temporaires', name: 'admin_temp_discussions', methods: ['GET'])]
+public function manageTempDiscussions(DiscussionRepository $discussionRepository): Response
+{
+    // Récupère uniquement les discussions temporaires
+    $tempDiscussions = $discussionRepository->findBy(['isTemporary' => true]);
+
+    return $this->render('admin/manage_temp_discussions.html.twig', [
+        'discussions' => $tempDiscussions,
+    ]);
+}
+
+#[Route('/admin/discussion/{id}/close', name: 'close_discussion', methods: ['POST'])]
+public function closeDiscussion(Discussion $discussion, Request $request, EntityManagerInterface $entityManager): Response
+{
+    if (!$this->isCsrfTokenValid('close_discussion_' . $discussion->getId(), $request->request->get('_token'))) {
+        $this->addFlash('error', 'Échec de la validation du token CSRF.');
+        return $this->redirectToRoute('admin_temp_discussions');
+    }
+
+    if ($discussion->isTemporary() && !$discussion->isClosed()) {
+        $discussion->setIsClosed(true);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'La discussion temporaire a été fermée avec succès.');
+    } else {
+        $this->addFlash('error', 'Impossible de fermer cette discussion.');
+    }
+
+    return $this->redirectToRoute('admin_temp_discussions');
+}
+
+#[Route('/admin/discussion/temporary/create', name: 'create_temp_discussion', methods: ['GET', 'POST'])]
+public function createTempDiscussion(Request $request, EntityManagerInterface $entityManager): Response
+{
+    $discussion = new Discussion();
+    $discussion->setAuteur($this->getUser()); // Définit l'auteur comme utilisateur actuel
+    $discussion->setIsTemporary(true); // Définit comme temporaire
+
+    $form = $this->createForm(DiscussionType::class, $discussion);
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+        $entityManager->persist($discussion);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'La discussion temporaire a été créée avec succès.');
+        return $this->redirectToRoute('admin_temp_discussions');
+    }
+
+    return $this->render('admin/create_temp_discussion.html.twig', [
+        'form' => $form->createView(),
+    ]);
+}
+
+#[Route('/admin/discussion/temporary/{id}/edit', name: 'edit_temp_discussion', methods: ['GET', 'POST'])]
+public function editTempDiscussion(Discussion $discussion, Request $request, EntityManagerInterface $entityManager): Response
+{
+    $form = $this->createForm(DiscussionType::class, $discussion);
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+        $entityManager->flush();
+
+        $this->addFlash('success', 'La discussion temporaire a été modifiée avec succès.');
+        return $this->redirectToRoute('admin_temp_discussions');
+    }
+
+    return $this->render('admin/edit_temp_discussion.html.twig', [
+        'form' => $form->createView(),
+        'discussion' => $discussion,
+    ]);
+}
+
+
 }

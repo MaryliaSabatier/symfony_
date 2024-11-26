@@ -567,5 +567,24 @@ public function deleteCommentAsModerator(Commentaire $commentaire, EntityManager
     return $this->redirectToRoute('discussion_show', ['id' => $discussionId]);
 }
 
+#[Route('/discussion/{id}/close', name: 'close_discussion', methods: ['POST'])]
+public function closeDiscussion(Discussion $discussion, EntityManagerInterface $entityManager): Response
+{
+    // Vérifier les droits (administrateurs et modérateurs seulement)
+    if (!$this->isGranted('ROLE_ADMIN') && !$this->isGranted('ROLE_MODERATOR')) {
+        $this->addFlash('error', 'Vous n\'avez pas l\'autorisation de fermer cette discussion.');
+        return $this->redirectToRoute('discussion_show', ['id' => $discussion->getId()]);
+    }
+
+    // Mettre à jour l'état de la discussion
+    $discussion->setIsClosed(true);
+    $entityManager->flush();
+
+    $this->addFlash('success', 'La discussion a été fermée avec succès.');
+    return $this->redirectToRoute('discussion_show', ['id' => $discussion->getId()]);
+}
+
+
+
     
 }

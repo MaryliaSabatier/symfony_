@@ -28,15 +28,41 @@ class Discussion
     #[ORM\OneToMany(mappedBy: 'discussion', targetEntity: Evenement::class, cascade: ['persist', 'remove'])]
     private Collection $evenements;
 
-    #[ORM\OneToMany(mappedBy: 'discussion', targetEntity: Abonnement::class, cascade: ['persist', 'remove'])]
-    private Collection $abonnements;
-
     public function __construct()
     {
         $this->posts = new ArrayCollection();
         $this->evenements = new ArrayCollection();
-        $this->abonnements = new ArrayCollection();
     }
+
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+private bool $isClosed = false;
+
+public function isClosed(): bool
+{
+    return $this->isClosed;
+}
+
+public function setIsClosed(bool $isClosed): self
+{
+    $this->isClosed = $isClosed;
+
+    return $this;
+}
+
+#[ORM\Column(type: 'boolean', options: ['default' => false])]
+private bool $isTemporary = false;
+
+public function isTemporary(): bool
+{
+    return $this->isTemporary;
+}
+
+public function setIsTemporary(bool $isTemporary): self
+{
+    $this->isTemporary = $isTemporary;
+
+    return $this;
+}
 
     // Getters et setters
 
@@ -123,36 +149,6 @@ class Discussion
             // Définir la relation inverse à null si nécessaire
             if ($evenement->getDiscussion() === $this) {
                 $evenement->setDiscussion(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Abonnement>
-     */
-    public function getAbonnements(): Collection
-    {
-        return $this->abonnements;
-    }
-
-    public function addAbonnement(Abonnement $abonnement): self
-    {
-        if (!$this->abonnements->contains($abonnement)) {
-            $this->abonnements->add($abonnement);
-            $abonnement->setDiscussion($this); // Assurez la cohérence de la relation inverse
-        }
-
-        return $this;
-    }
-
-    public function removeAbonnement(Abonnement $abonnement): self
-    {
-        if ($this->abonnements->removeElement($abonnement)) {
-            // Définir la relation inverse à null si nécessaire
-            if ($abonnement->getDiscussion() === $this) {
-                $abonnement->setDiscussion(null);
             }
         }
 

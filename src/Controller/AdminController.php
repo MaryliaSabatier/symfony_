@@ -132,39 +132,47 @@ class AdminController extends AbstractController
     }
 
     #[Route('/admin/discussions-temporaires', name: 'admin_temp_discussions', methods: ['GET'])]
-public function manageTempDiscussions(DiscussionRepository $discussionRepository): Response
-{
-    // Récupère uniquement les discussions temporaires
-    $tempDiscussions = $discussionRepository->findBy(['isTemporary' => true]);
+    public function manageTempDiscussions(DiscussionRepository $discussionRepository): Response
+    {
+        $tempDiscussions = $discussionRepository->findBy(['isTemporary' => true]);
+    
+        return $this->render('admin/manage_temp_discussions.html.twig', [
+            'discussions' => $tempDiscussions,
+        ]);
+    }
 
-    return $this->render('admin/manage_temp_discussions.html.twig', [
-        'discussions' => $tempDiscussions,
-    ]);
-}
-
-#[Route('/admin/discussion/{id}/close', name: 'close_discussion', methods: ['POST'])]
-public function closeDiscussion(Discussion $discussion, Request $request, EntityManagerInterface $entityManager): Response
-{
-    if (!$this->isCsrfTokenValid('close_discussion_' . $discussion->getId(), $request->request->get('_token'))) {
-        $this->addFlash('error', 'Échec de la validation du token CSRF.');
+    #[Route('/admin/discussion/{id}/close', name: 'close_discussion', methods: ['POST'])]
+    public function closeDiscussion(Discussion $discussion, Request $request, EntityManagerInterface $entityManager): Response
+    {
+        // Vérifiez le token CSRF
+        if (!$this->isCsrfTokenValid('close_discussion_' . $discussion->getId(), $request->request->get('_token'))) {
+            $this->addFlash('error', 'Échec de la validation du token CSRF.');
+            return $this->redirectToRoute('admin_temp_discussions');
+        }
+    
+        // Fermez la discussion si elle est temporaire et ouverte
+        if ($discussion->isTemporary() && !$discussion->isClosed()) {
+            $discussion->setIsClosed(true);
+            $entityManager->flush();
+    
+            $this->addFlash('success', 'La discussion temporaire a été fermée avec succès.');
+        } else {
+            $this->addFlash('error', 'Impossible de fermer cette discussion.');
+        }
+    
+        // Redirection explicite vers la page des discussions temporaires
         return $this->redirectToRoute('admin_temp_discussions');
     }
+    
 
-    if ($discussion->isTemporary() && !$discussion->isClosed()) {
-        $discussion->setIsClosed(true);
-        $entityManager->flush();
-
-        $this->addFlash('success', 'La discussion temporaire a été fermée avec succès.');
-    } else {
-        $this->addFlash('error', 'Impossible de fermer cette discussion.');
-    }
-
-    return $this->redirectToRoute('admin_temp_discussions');
-}
 
 #[Route('/admin/discussion/temporary/create', name: 'create_temp_discussion', methods: ['GET', 'POST'])]
 public function createTempDiscussion(Request $request, EntityManagerInterface $entityManager): Response
 {
+    // Vérification des rôles (Admin ou Modérateur)
+    $this->denyAccessUnlessGranted('ROLE_ADMIN');
+    $this->denyAccessUnlessGranted('ROLE_MODERATOR');
+    
     $discussion = new Discussion();
     $discussion->setAuteur($this->getUser()); // Définit l'auteur comme utilisateur actuel
     $discussion->setIsTemporary(true); // Définit comme temporaire
@@ -203,6 +211,26 @@ public function editTempDiscussion(Discussion $discussion, Request $request, Ent
         'discussion' => $discussion,
     ]);
 }
+
+#[Route('/admin/discussion/temporary/delete/{id}', name: 'delete_temp_discussion', methods: ['POST'])]
+public function deleteTempDiscussion(
+    Discussion $discussion,
+    Request $request,
+    EntityManagerInterface $entityManager
+): Response {
+    // Vérifier le token CSRF pour protéger contre les attaques CSRF
+    if ($this->isCsrfTokenValid('delete_temp_discussion_' . $discussion->getId(), $request->request->get('_token'))) {
+        $entityManager->remove($discussion);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'La discussion temporaire a été supprimée avec succès.');
+    } else {
+        $this->addFlash('error', 'Token CSRF invalide.');
+    }
+
+    return $this->redirectToRoute('admin_temp_discussions');
+}
+
 
 
 }

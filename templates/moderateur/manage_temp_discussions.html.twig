@@ -1,4 +1,4 @@
-{% extends 'admin/admin_base.html.twig' %}
+{% extends 'base.html.twig' %}
 
 {% block title %}Gestion des Discussions Temporaires{% endblock %}
 
@@ -6,9 +6,9 @@
 <div class="container mt-4">
     <h1 class="mb-4">Gestion des Discussions Temporaires</h1>
 
-    <!-- Bouton pour revenir au panneau admin -->
+    <!-- Bouton retour au dashboard -->
     <div class="mb-4">
-        <a href="{{ path('admin_dashboard') }}" class="btn btn-secondary">← Retour au Panneau Admin</a>
+        <a href="{{ path('moderator_dashboard') }}" class="btn btn-primary">← Retour au Tableau de Bord</a>
     </div>
 
     <!-- Bouton pour ajouter une discussion -->
@@ -34,21 +34,21 @@
                         <td>{{ discussion.isClosed ? 'Fermée' : 'Ouverte' }}</td>
                         <td>
                             <!-- Bouton Modifier -->
-                            <a href="{{ path('edit_temp_discussion', { id: discussion.id }) }}" class="btn btn-warning btn-sm">Modifier</a>
-
-                            <!-- Bouton Supprimer -->
-                            <form action="{{ path('delete_temp_discussion', { id: discussion.id }) }}" method="post" style="display: inline;">
-                                <input type="hidden" name="_token" value="{{ csrf_token('delete_temp_discussion_' ~ discussion.id) }}"/>
-                                <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
-                            </form>
+                            <a href="{{ path('moderator_edit_temp_discussion', { id: discussion.id }) }}" class="btn btn-warning btn-sm">Modifier</a>
 
                             <!-- Bouton Fermer -->
                             {% if not discussion.isClosed %}
                                 <form action="{{ path('close_discussion', { id: discussion.id }) }}" method="post" style="display: inline;">
-                                    <input type="hidden" name="_token" value="{{ csrf_token('close_discussion_' ~ discussion.id) }}"/>
+                                    <input type="hidden" name="_token" value="{{ csrf_token('close_discussion_' ~ discussion.id) }}">
                                     <button type="submit" class="btn btn-secondary btn-sm">Fermer</button>
                                 </form>
                             {% endif %}
+
+                            <!-- Bouton Supprimer -->
+                            <form action="{{ path('moderator_delete_temp_discussion', { id: discussion.id }) }}" method="post" style="display: inline;">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete_temp_discussion_' ~ discussion.id) }}">
+                                <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+                            </form>
                         </td>
                     </tr>
                 {% endfor %}

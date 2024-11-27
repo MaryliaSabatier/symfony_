@@ -6,6 +6,7 @@ use App\Entity\Evenement;
 use App\Entity\Discussion;
 use App\Form\EvenementType;
 use App\Form\DiscussionType;
+use App\Repository\DiscussionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -179,4 +180,76 @@ class ModerateurController extends AbstractController
 
         return $this->redirectToRoute('moderator_manage_discussions');
     }
+
+    #[Route('/moderateur/discussions-temporaires', name: 'moderator_temp_discussions', methods: ['GET'])]
+public function manageTempDiscussions(DiscussionRepository $discussionRepository): Response
+{
+    $tempDiscussions = $discussionRepository->findBy(['isTemporary' => true]);
+
+    return $this->render('moderateur/manage_temp_discussions.html.twig', [
+        'discussions' => $tempDiscussions,
+    ]);
+}
+
+#[Route('/moderateur/discussion/temporary/create', name: 'moderator_create_temp_discussion', methods: ['GET', 'POST'])]
+public function createTempDiscussion(Request $request, EntityManagerInterface $entityManager): Response
+{
+    $discussion = new Discussion();
+    $discussion->setAuteur($this->getUser()); // Définit l'auteur comme utilisateur actuel
+    $discussion->setIsTemporary(true); // Définit comme temporaire
+
+    $form = $this->createForm(DiscussionType::class, $discussion);
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+        $entityManager->persist($discussion);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'La discussion temporaire a été créée avec succès.');
+        return $this->redirectToRoute('moderator_temp_discussions');
+    }
+
+    return $this->render('moderateur/create_temp_discussion.html.twig', [
+        'form' => $form->createView(),
+    ]);
+}
+
+#[Route('/moderateur/discussion/temporary/edit/{id}', name: 'moderator_edit_temp_discussion', methods: ['GET', 'POST'])]
+public function editTempDiscussion(Discussion $discussion, Request $request, EntityManagerInterface $entityManager): Response
+{
+    $form = $this->createForm(DiscussionType::class, $discussion);
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+        $entityManager->flush();
+        $this->addFlash('success', 'La discussion temporaire a été modifiée avec succès.');
+        return $this->redirectToRoute('moderator_temp_discussions');
+    }
+
+    return $this->render('moderateur/edit_temp_discussion.html.twig', [
+        'form' => $form->createView(),
+        'discussion' => $discussion,
+    ]);
+}
+
+#[Route('/moderateur/discussion/temporary/delete/{id}', name: 'moderator_delete_temp_discussion', methods: ['POST'])]
+public function deleteTempDiscussion(
+    Discussion $discussion,
+    Request $request,
+    EntityManagerInterface $entityManager
+): Response {
+    // Vérifier si le token CSRF est valide
+    if ($this->isCsrfTokenValid('delete_temp_discussion_' . $discussion->getId(), $request->request->get('_token'))) {
+        $entityManager->remove($discussion);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'La discussion temporaire a été supprimée avec succès.');
+    } else {
+        $this->addFlash('error', 'Échec de la suppression de la discussion temporaire.');
+    }
+
+    return $this->redirectToRoute('moderator_temp_discussions');
+}
+
+
 }

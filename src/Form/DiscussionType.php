@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Entity\Discussion;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -15,6 +16,14 @@ class DiscussionType extends AbstractType
         $builder
             ->add('nom', TextType::class, [
                 'label' => 'Nom de la discussion',
+            ])
+            ->add('description', TextareaType::class, [
+                'label' => 'Description',
+                'required' => false, // La description peut être facultative
+                'attr' => [
+                    'placeholder' => 'Ajoutez une description pour cette discussion (facultatif)',
+                    'rows' => 4,
+                ],
             ]);
     }
 

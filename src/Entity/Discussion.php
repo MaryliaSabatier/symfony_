@@ -18,6 +18,9 @@ class Discussion
     #[ORM\Column(type: 'string', length: 255)]
     private ?string $nom = null;
 
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $description = null;
+
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $auteur = null;
@@ -28,41 +31,17 @@ class Discussion
     #[ORM\OneToMany(mappedBy: 'discussion', targetEntity: Evenement::class, cascade: ['persist', 'remove'])]
     private Collection $evenements;
 
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $isClosed = false;
+
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $isTemporary = false;
+
     public function __construct()
     {
         $this->posts = new ArrayCollection();
         $this->evenements = new ArrayCollection();
     }
-
-    #[ORM\Column(type: 'boolean', options: ['default' => false])]
-private bool $isClosed = false;
-
-public function isClosed(): bool
-{
-    return $this->isClosed;
-}
-
-public function setIsClosed(bool $isClosed): self
-{
-    $this->isClosed = $isClosed;
-
-    return $this;
-}
-
-#[ORM\Column(type: 'boolean', options: ['default' => false])]
-private bool $isTemporary = false;
-
-public function isTemporary(): bool
-{
-    return $this->isTemporary;
-}
-
-public function setIsTemporary(bool $isTemporary): self
-{
-    $this->isTemporary = $isTemporary;
-
-    return $this;
-}
 
     // Getters et setters
 
@@ -83,6 +62,18 @@ public function setIsTemporary(bool $isTemporary): self
         return $this;
     }
 
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): self
+    {
+        $this->description = $description;
+
+        return $this;
+    }
+
     public function getAuteur(): ?User
     {
         return $this->auteur;
@@ -91,6 +82,30 @@ public function setIsTemporary(bool $isTemporary): self
     public function setAuteur(?User $auteur): self
     {
         $this->auteur = $auteur;
+
+        return $this;
+    }
+
+    public function isClosed(): bool
+    {
+        return $this->isClosed;
+    }
+
+    public function setIsClosed(bool $isClosed): self
+    {
+        $this->isClosed = $isClosed;
+
+        return $this;
+    }
+
+    public function isTemporary(): bool
+    {
+        return $this->isTemporary;
+    }
+
+    public function setIsTemporary(bool $isTemporary): self
+    {
+        $this->isTemporary = $isTemporary;
 
         return $this;
     }

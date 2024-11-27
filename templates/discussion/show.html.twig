@@ -149,14 +149,18 @@
         </div>
 
         <!-- Formulaire pour ajouter un nouveau message -->
-        <div class="add-post mt-4">
-            <h3>Ajouter un message</h3>
-            {{ form_start(postForm) }}
-                <div class="form-group">
-                    {{ form_widget(postForm.contenu, {'attr': {'class': 'form-control', 'placeholder': 'Écrivez votre message ici...'}}) }}
-                </div>
-                <button type="submit" class="btn btn-primary mt-2">Ajouter</button>
-            {{ form_end(postForm) }}
-        </div>
-    </div>
+        {% if not discussion.isClosed %}
+            <div class="add-post mt-4">
+                <h3>Ajouter un message</h3>
+                {{ form_start(postForm) }}
+                    <div class="form-group">
+                        {{ form_widget(postForm.contenu, {'attr': {'class': 'form-control', 'placeholder': 'Écrivez votre message ici...'}}) }}
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-2">Ajouter</button>
+                {{ form_end(postForm) }}
+            </div>
+        {% else %}
+            <p class="alert alert-warning mt-4">Cette discussion est fermée. Vous ne pouvez plus ajouter de message.</p>
+        {% endif %}
+            </div>
 {% endblock %}

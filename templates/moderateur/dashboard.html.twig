@@ -6,10 +6,6 @@
 <div class="container mt-4">
     <h1>Bienvenue dans le tableau de bord du Modérateur</h1>
 
-    <!-- Bouton de déconnexion -->
-    <div class="mb-4">
-        <a href="{{ path('app_logout') }}" class="btn btn-danger w-100">Déconnexion</a>
-    </div>
 
     <!-- Bouton pour accéder au Fil Commun -->
     <div class="mb-4">
@@ -21,15 +17,21 @@
         <a href="{{ path('moderator_manage_events') }}" class="btn btn-info w-100">Gestion des événements temporaires</a>
     </div>
 
-    <!-- Bouton pour accéder à la gestion des discussions -->
-    <div class="mb-4">
-        <a href="{{ path('fil_commun') }}" class="btn btn-info w-100">Accéder au Fil Commun</a>
-    </div>
-
     <!-- Bouton pour accéder à la gestion des discussions temporaires -->
     <div class="mb-4">
         <a href="{{ path('moderator_temp_discussions') }}" class="btn btn-success w-100">Gestion des discussions temporaires</a>
     </div>
+
+    <!-- Bouton pour accéder à la gestion des discussions -->
+    <div class="mb-4">
+        <a href="{{ path('fil_commun') }}" class="btn btn-info w-100">Accéder au Fil Commun</a>
+    </div>
+    
+    <!-- Bouton de déconnexion -->
+    <div class="mb-4">
+        <a href="{{ path('app_logout') }}" class="btn btn-danger w-100">Déconnexion</a>
+    </div>
+
 
 </div>
 {% endblock %}

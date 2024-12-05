@@ -32,12 +32,26 @@
 
 <!-- Bouton d'abonnement/désabonnement -->
 <div class="mb-4 d-flex justify-content-end">
-    <form method="post" action="{{ isSubscribed ? path('discussion_desabonner', { id: discussion.id }) : path('discussion_abonner', { id: discussion.id }) }}">
+    <form 
+        method="post" 
+        action="{{ isSubscribed ? path('discussion_desabonner', { id: discussion.id }) : path('discussion_abonner', { id: discussion.id }) }}"
+    >
         <input type="hidden" name="_token" value="{{ csrf_token(isSubscribed ? 'desabonner_discussion_' ~ discussion.id : 'abonner_discussion_' ~ discussion.id) }}">
+
         {% if isSubscribed %}
-            <button type="submit" class="btn btn-danger">Se désabonner</button>
+            {% if discussion.auteur == app.user and (is_granted('ROLE_ADMIN') or is_granted('ROLE_MODERATOR')) %}
+                <!-- L'auteur (admin/modérateur) ne peut pas se désabonner de sa propre discussion -->
+                <button type="button" class="btn btn-secondary" disabled>Vous êtes abonné automatiquement</button>
+            {% else %}
+                <button type="submit" class="btn btn-danger">Se désabonner</button>
+            {% endif %}
         {% else %}
-            <button type="submit" class="btn btn-success">S'abonner</button>
+            {% if discussion.auteur == app.user and (is_granted('ROLE_ADMIN') or is_granted('ROLE_MODERATOR')) %}
+                <!-- L'auteur (admin/modérateur) est automatiquement abonné -->
+                <button type="button" class="btn btn-secondary" disabled>Vous êtes abonné automatiquement</button>
+            {% else %}
+                <button type="submit" class="btn btn-success">S'abonner</button>
+            {% endif %}
         {% endif %}
     </form>
 </div>

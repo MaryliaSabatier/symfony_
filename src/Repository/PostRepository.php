@@ -17,22 +17,13 @@ class PostRepository extends ServiceEntityRepository
         parent::__construct($registry, Post::class);
     }
 
-    /**
-     * Recherche des posts en fonction d'un mot-clé
-     *
-     * @param string $query Le mot-clé à rechercher
-     * @return Post[] Retourne un tableau d'objets Post correspondant au mot-clé
-     */
-    public function findBySearchQuery(string $query): array
+    public function findBySearchQuery(string $query)
     {
         return $this->createQueryBuilder('p')
-            ->leftJoin('p.commentaires', 'c') // Inclure les commentaires associés
-            ->addSelect('c')
             ->where('p.contenu LIKE :query')
             ->setParameter('query', '%' . $query . '%')
             ->orderBy('p.dateCreation', 'DESC')
-            ->getQuery()
-            ->getResult();
+            ->getQuery(); // Assurez-vous de retourner la Query ici
     }
 
     /**

@@ -40,24 +40,39 @@ class DiscussionController extends AbstractController
     public function create(Request $request, EntityManagerInterface $entityManager): Response
     {
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
-
+    
         $discussion = new Discussion();
         $form = $this->createForm(DiscussionType::class, $discussion);
         $form->handleRequest($request);
-
+    
         if ($form->isSubmitted() && $form->isValid()) {
-            $discussion->setAuteur($this->getUser());
+            // Récupérer l'utilisateur connecté
+            $user = $this->getUser();
+    
+            // Définir l'auteur de la discussion
+            $discussion->setAuteur($user);
+    
+            // Ajouter un abonnement pour l'auteur
+            $abonnement = new Abonnement();
+            $abonnement->setUser($user);
+            $abonnement->setDiscussion($discussion);
+    
+            // Persister les données
             $entityManager->persist($discussion);
+            $entityManager->persist($abonnement);
             $entityManager->flush();
-
-            $this->addFlash('success', 'Discussion créée avec succès.');
+    
+            // Ajouter un message de confirmation
+            $this->addFlash('success', 'Discussion créée avec succès. Vous êtes maintenant abonné à cette discussion.');
+    
             return $this->redirectToRoute('admin_discussion_list');
         }
-
+    
         return $this->render('admin/create_discussion.html.twig', [
             'form' => $form->createView(),
         ]);
     }
+    
 
     #[Route('/admin/discussions/edit/{id}', name: 'admin_edit_discussion', methods: ['GET', 'POST'])]
     public function edit(Discussion $discussion, Request $request, EntityManagerInterface $entityManager): Response
@@ -116,25 +131,25 @@ class DiscussionController extends AbstractController
     ): Response {
         // Récupération du paramètre de recherche
         $query = $request->query->get('q', '');
-    
+
         // Recherche des événements correspondant au terme
         $evenements = $query
             ? $evenementRepository->createQueryBuilder('e')
-                ->andWhere('e.discussion = :discussion')
-                ->andWhere('e.contenu LIKE :query OR e.lieu LIKE :query')
-                ->setParameter('discussion', $discussion)
-                ->setParameter('query', '%' . $query . '%')
-                ->orderBy('e.dateCreation', 'DESC')
-                ->getQuery()
-                ->getResult()
+            ->andWhere('e.discussion = :discussion')
+            ->andWhere('e.contenu LIKE :query OR e.lieu LIKE :query')
+            ->setParameter('discussion', $discussion)
+            ->setParameter('query', '%' . $query . '%')
+            ->orderBy('e.dateCreation', 'DESC')
+            ->getQuery()
+            ->getResult()
             : $evenementRepository->findBy(['discussion' => $discussion], ['dateCreation' => 'DESC']);
-    
+
         // Recherche des abonnements pour l'utilisateur connecté
         $user = $this->getUser();
-        $abonnementIds = $user 
+        $abonnementIds = $user
             ? $abonnementRepository->findSubscribedEventIdsByUser($user)
             : [];
-    
+
         // Vérifie si l'utilisateur est abonné à la discussion
         $isSubscribed = false;
         if ($user) {
@@ -143,23 +158,23 @@ class DiscussionController extends AbstractController
                 'discussion' => $discussion,
             ]) !== null;
         }
-    
+
         // Recherche des posts correspondant au terme
         $posts = $query
             ? $postRepository->findByDiscussionAndQuery($discussion, $query)
             : $postRepository->findBy(['discussion' => $discussion], ['dateCreation' => 'DESC']);
-    
+
         // Gestion du formulaire d'ajout de post
         $post = new Post();
         $post->setDiscussion($discussion);
         $post->setAuteur($this->getUser());
-    
+
         $postForm = $this->createForm(PostType::class, $post);
         $postForm->handleRequest($request);
-    
+
         if ($postForm->isSubmitted() && $postForm->isValid()) {
             $entityManager->persist($post);
-    
+
             // Envoyer des notifications aux abonnés de la discussion
             $abonnements = $abonnementRepository->findBy(['discussion' => $discussion]);
             foreach ($abonnements as $abonnement) {
@@ -169,16 +184,16 @@ class DiscussionController extends AbstractController
                 $notification->setCreatedAt(new \DateTime());
                 $entityManager->persist($notification);
             }
-    
+
             $entityManager->flush();
-    
+
             $this->addFlash('success', 'Message ajouté avec succès.');
             return $this->redirectToRoute('discussion_show', [
                 'id' => $discussion->getId(),
                 'q' => $query, // Maintenir la recherche
             ]);
         }
-    
+
         // Génération des formulaires de commentaire pour chaque post
         $commentForms = [];
         foreach ($posts as $post) {
@@ -187,7 +202,7 @@ class DiscussionController extends AbstractController
             ]);
             $commentForms[$post->getId()] = $commentForm->createView();
         }
-    
+
         return $this->render('discussion/show.html.twig', [
             'discussion' => $discussion,
             'posts' => $posts,
@@ -198,7 +213,7 @@ class DiscussionController extends AbstractController
             'abonnementIds' => $abonnementIds, // Transmettre les IDs des abonnements à la vue
             'isSubscribed' => $isSubscribed, // Indique si l'utilisateur est abonné à la discussion
         ]);
-    }    
+    }
 
     #[Route('/evenement/{id}/abonner', name: 'abonner_evenement', methods: ['POST'])]
     public function abonnerEvenement(Evenement $evenement, EntityManagerInterface $entityManager): Response
@@ -315,7 +330,7 @@ class DiscussionController extends AbstractController
         if ($this->isCsrfTokenValid('delete_post' . $post->getId(), $request->request->get('_token'))) {
             $entityManager->remove($post);
             $entityManager->flush();
-        
+
             $this->addFlash('success', 'Post supprimé avec succès.');
         } else {
             $this->addFlash('error', 'Token CSRF invalide.');
@@ -324,57 +339,57 @@ class DiscussionController extends AbstractController
     }
 
     #[Route('/comment/edit/{id}', name: 'edit_comment', methods: ['GET', 'POST'])]
-public function editComment(
-    Commentaire $commentaire,
-    Request $request,
-    EntityManagerInterface $entityManager
-): Response {
-    // Vérification : L'utilisateur doit être l'auteur du commentaire
-    if ($this->getUser() !== $commentaire->getAuteur()) {
-        $this->addFlash('error', 'Vous ne pouvez modifier que vos propres commentaires.');
+    public function editComment(
+        Commentaire $commentaire,
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): Response {
+        // Vérification : L'utilisateur doit être l'auteur du commentaire
+        if ($this->getUser() !== $commentaire->getAuteur()) {
+            $this->addFlash('error', 'Vous ne pouvez modifier que vos propres commentaires.');
+            return $this->redirectToRoute('discussion_show', ['id' => $commentaire->getPost()->getDiscussion()->getId()]);
+        }
+
+        $form = $this->createForm(CommentaireType::class, $commentaire);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->flush();
+            $this->addFlash('success', 'Commentaire modifié avec succès.');
+
+            return $this->redirectToRoute('discussion_show', ['id' => $commentaire->getPost()->getDiscussion()->getId()]);
+        }
+
+        return $this->render('comment/edit.html.twig', [
+            'form' => $form->createView(),
+            'commentaire' => $commentaire,
+        ]);
+    }
+
+    #[Route('/comment/delete/{id}', name: 'delete_comment', methods: ['POST'])]
+    public function deleteComment(
+        Commentaire $commentaire,
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): Response {
+        // Vérification : L'utilisateur doit être l'auteur du commentaire
+        if ($this->getUser() !== $commentaire->getAuteur()) {
+            $this->addFlash('error', 'Vous n\'êtes pas autorisé à supprimer ce commentaire.');
+            return $this->redirectToRoute('discussion_show', ['id' => $commentaire->getPost()->getDiscussion()->getId()]);
+        }
+
+        if ($this->isCsrfTokenValid('delete_comment_' . $commentaire->getId(), $request->request->get('_token'))) {
+            $entityManager->remove($commentaire);
+            $entityManager->flush();
+            $this->addFlash('success', 'Commentaire supprimé avec succès.');
+        } else {
+            $this->addFlash('error', 'Token CSRF invalide.');
+        }
+
         return $this->redirectToRoute('discussion_show', ['id' => $commentaire->getPost()->getDiscussion()->getId()]);
     }
 
-    $form = $this->createForm(CommentaireType::class, $commentaire);
-    $form->handleRequest($request);
-
-    if ($form->isSubmitted() && $form->isValid()) {
-        $entityManager->flush();
-        $this->addFlash('success', 'Commentaire modifié avec succès.');
-
-        return $this->redirectToRoute('discussion_show', ['id' => $commentaire->getPost()->getDiscussion()->getId()]);
-    }
-
-    return $this->render('comment/edit.html.twig', [
-        'form' => $form->createView(),
-        'commentaire' => $commentaire,
-    ]);
-}
-
-#[Route('/comment/delete/{id}', name: 'delete_comment', methods: ['POST'])]
-public function deleteComment(
-    Commentaire $commentaire,
-    Request $request,
-    EntityManagerInterface $entityManager
-): Response {
-    // Vérification : L'utilisateur doit être l'auteur du commentaire
-    if ($this->getUser() !== $commentaire->getAuteur()) {
-        $this->addFlash('error', 'Vous n\'êtes pas autorisé à supprimer ce commentaire.');
-        return $this->redirectToRoute('discussion_show', ['id' => $commentaire->getPost()->getDiscussion()->getId()]);
-    }
-
-    if ($this->isCsrfTokenValid('delete_comment_' . $commentaire->getId(), $request->request->get('_token'))) {
-        $entityManager->remove($commentaire);
-        $entityManager->flush();
-        $this->addFlash('success', 'Commentaire supprimé avec succès.');
-    } else {
-        $this->addFlash('error', 'Token CSRF invalide.');
-    }
-
-    return $this->redirectToRoute('discussion_show', ['id' => $commentaire->getPost()->getDiscussion()->getId()]);
-}
-
-#[Route('/discussion/{id}/add-event', name: 'discussion_add_event', methods: ['GET', 'POST'])]
+    #[Route('/discussion/{id}/add-event', name: 'discussion_add_event', methods: ['GET', 'POST'])]
     public function addEvent(
         Request $request,
         Discussion $discussion,
@@ -402,6 +417,16 @@ public function deleteComment(
                 $entityManager->persist($notification);
             }
 
+            // Notifications pour les abonnés
+            $abonnements = $abonnementRepository->findBy(['discussion' => $discussion]);
+            foreach ($abonnements as $abonnement) {
+                $notification = new Notification();
+                $notification->setUser($abonnement->getUser());
+                $notification->setMessage("Nouveau post ajouté dans la discussion : " . $discussion->getNom());
+                $notification->setCreatedAt(new \DateTime());
+                $notification->setDiscussion($discussion);
+                $entityManager->persist($notification);
+            }
             $entityManager->flush();
 
             $this->addFlash('success', 'Événement ajouté avec succès.');
@@ -439,30 +464,30 @@ public function deleteComment(
     public function abonnerDiscussion(Discussion $discussion, EntityManagerInterface $entityManager): Response
     {
         $user = $this->getUser();
-    
+
         // Vérifie si l'utilisateur est déjà abonné
         $abonnement = $entityManager->getRepository(Abonnement::class)->findOneBy([
             'user' => $user,
             'discussion' => $discussion,
         ]);
-    
+
         if (!$abonnement) {
             $nouvelAbonnement = new Abonnement();
             $nouvelAbonnement->setUser($user);
             $nouvelAbonnement->setDiscussion($discussion);
-    
+
             $entityManager->persist($nouvelAbonnement);
             $entityManager->flush();
-    
+
             $this->addFlash('success', 'Vous êtes maintenant abonné à cette discussion.');
         } else {
             $this->addFlash('error', 'Vous êtes déjà abonné à cette discussion.');
         }
-    
+
         // Rester sur la page actuelle (discussion_show)
         return $this->redirectToRoute('discussion_show', ['id' => $discussion->getId()]);
     }
-    
+
     /**
      * Se désabonner d'une discussion.
      */
@@ -470,6 +495,12 @@ public function deleteComment(
     public function desabonnerDiscussion(Discussion $discussion, EntityManagerInterface $entityManager): Response
     {
         $user = $this->getUser();
+    
+        // Vérifie si l'utilisateur est l'auteur de la discussion
+        if ($discussion->getAuteur() === $user) {
+            $this->addFlash('error', 'Vous ne pouvez pas vous désabonner d\'une discussion que vous avez créée.');
+            return $this->redirectToRoute('discussion_show', ['id' => $discussion->getId()]);
+        }
     
         // Trouver l'abonnement existant
         $abonnement = $entityManager->getRepository(Abonnement::class)->findOneBy([
@@ -486,177 +517,176 @@ public function deleteComment(
             $this->addFlash('error', 'Vous n\'êtes pas abonné à cette discussion.');
         }
     
-        // Rester sur la page actuelle (discussion_show)
+        return $this->redirectToRoute('discussion_show', ['id' => $discussion->getId()]);
+    }
+    
+
+    /**
+     * Supprimer un post en tant qu'administrateur.
+     */
+    #[Route('/admin/post/{id}/delete', name: 'admin_delete_post', methods: ['POST'])]
+    public function deletePostAsAdmin(Post $post, EntityManagerInterface $entityManager): Response
+    {
+        // Vérifiez que l'utilisateur a le rôle ADMIN
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+
+        $discussionId = $post->getDiscussion()->getId(); // Obtenez l'ID de la discussion pour redirection
+
+        // Supprimez le post
+        $entityManager->remove($post);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Post supprimé avec succès.');
+
+        return $this->redirectToRoute('discussion_show', ['id' => $discussionId]);
+    }
+
+    /**
+     * Supprimer un post en tant qu'administrateur ou modérateur.
+     */
+    #[Route('/moderator/post/{id}/delete', name: 'moderator_delete_post', methods: ['POST'])]
+    public function deletePostAsModerator(Post $post, EntityManagerInterface $entityManager): Response
+    {
+        $this->denyAccessUnlessGranted('ROLE_MODERATOR');
+
+        $discussionId = $post->getDiscussion()->getId(); // Obtenez l'ID de la discussion pour redirection
+
+        // Supprimez le post
+        $entityManager->remove($post);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Post supprimé avec succès.');
+
+        return $this->redirectToRoute('discussion_show', ['id' => $discussionId]);
+    }
+
+    /**
+     * Supprimer un commentaire en tant qu'administrateur.
+     */
+    #[Route('/admin/comment/{id}/delete', name: 'admin_delete_comment', methods: ['POST'])]
+    public function deleteCommentAsAdmin(Commentaire $commentaire, EntityManagerInterface $entityManager): Response
+    {
+        // Vérifiez que l'utilisateur a le rôle ADMIN
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+
+        $discussionId = $commentaire->getPost()->getDiscussion()->getId(); // Obtenez l'ID de la discussion pour redirection
+
+        // Supprimez le commentaire
+        $entityManager->remove($commentaire);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Commentaire supprimé avec succès.');
+
+        return $this->redirectToRoute('discussion_show', ['id' => $discussionId]);
+    }
+    /**
+     * Supprimer un commentaire en tant qu'administrateur ou modérateur.
+     */
+    #[Route('/moderator/comment/{id}/delete', name: 'moderator_delete_comment', methods: ['POST'])]
+    public function deleteCommentAsModerator(Commentaire $commentaire, EntityManagerInterface $entityManager): Response
+    {
+        $this->denyAccessUnlessGranted('ROLE_MODERATOR');
+
+        $discussionId = $commentaire->getPost()->getDiscussion()->getId(); // Obtenez l'ID de la discussion pour redirection
+
+        // Supprimez le commentaire
+        $entityManager->remove($commentaire);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Commentaire supprimé avec succès.');
+
+        return $this->redirectToRoute('discussion_show', ['id' => $discussionId]);
+    }
+
+    #[Route('/discussion/{id}/close', name: 'close_discussion', methods: ['POST'])]
+    public function closeDiscussion(Discussion $discussion, EntityManagerInterface $entityManager): Response
+    {
+        // Vérifier les droits (administrateurs et modérateurs seulement)
+        if (!$this->isGranted('ROLE_ADMIN') && !$this->isGranted('ROLE_MODERATOR')) {
+            $this->addFlash('error', 'Vous n\'avez pas l\'autorisation de fermer cette discussion.');
+            return $this->redirectToRoute('discussion_show', ['id' => $discussion->getId()]);
+        }
+
+        // Mettre à jour l'état de la discussion
+        $discussion->setIsClosed(true);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'La discussion a été fermée avec succès.');
         return $this->redirectToRoute('discussion_show', ['id' => $discussion->getId()]);
     }
 
     /**
- * Supprimer un post en tant qu'administrateur.
- */
-#[Route('/admin/post/{id}/delete', name: 'admin_delete_post', methods: ['POST'])]
-public function deletePostAsAdmin(Post $post, EntityManagerInterface $entityManager): Response
-{
-    // Vérifiez que l'utilisateur a le rôle ADMIN
-    $this->denyAccessUnlessGranted('ROLE_ADMIN');
+     * Ajouter un message dans une discussion.
+     */
+    #[Route('/discussion/{id}/post', name: 'post_message', methods: ['POST'])]
+    public function postMessage(
+        Discussion $discussion,
+        Request $request,
+        EntityManagerInterface $entityManager,
+        NotificationRepository $notificationRepository,
+        AbonnementRepository $abonnementRepository
+    ): Response {
+        $post = new Post();
+        $post->setDiscussion($discussion);
+        $post->setAuteur($this->getUser());
+        $post->setDateCreation(new \DateTime());
 
-    $discussionId = $post->getDiscussion()->getId(); // Obtenez l'ID de la discussion pour redirection
+        // Création et traitement du formulaire
+        $form = $this->createForm(PostType::class, $post);
+        $form->handleRequest($request);
 
-    // Supprimez le post
-    $entityManager->remove($post);
-    $entityManager->flush();
+        if ($form->isSubmitted() && $form->isValid()) {
+            // Sauvegarde du message
+            $entityManager->persist($post);
 
-    $this->addFlash('success', 'Post supprimé avec succès.');
+            // Envoi des notifications aux abonnés
+            $abonnés = $abonnementRepository->findBy(['discussion' => $discussion]);
+            foreach ($abonnés as $abonné) {
+                if ($abonné->getUser() !== $this->getUser()) { // Ne pas notifier l'auteur
+                    $notification = new Notification();
+                    $notification->setUser($abonné->getUser());
+                    $notification->setMessage(sprintf(
+                        'Nouveau message dans la discussion "%s"',
+                        $discussion->getNom()
+                    ));
+                    $notification->setCreatedAt(new \DateTime());
+                    $notification->setIsRead(false);
 
-    return $this->redirectToRoute('discussion_show', ['id' => $discussionId]);
-}
+                    $entityManager->persist($notification);
+                }
+            }
 
-/**
- * Supprimer un post en tant qu'administrateur ou modérateur.
- */
-#[Route('/moderator/post/{id}/delete', name: 'moderator_delete_post', methods: ['POST'])]
-public function deletePostAsModerator(Post $post, EntityManagerInterface $entityManager): Response
-{
-    $this->denyAccessUnlessGranted('ROLE_MODERATOR');
+            // Enregistrement des notifications et du message
+            $entityManager->flush();
 
-    $discussionId = $post->getDiscussion()->getId(); // Obtenez l'ID de la discussion pour redirection
+            // Message flash de succès
+            $this->addFlash('success', 'Message ajouté avec succès.');
+        } else {
+            $this->addFlash('error', 'Erreur lors de l\'ajout du message.');
+        }
 
-    // Supprimez le post
-    $entityManager->remove($post);
-    $entityManager->flush();
-
-    $this->addFlash('success', 'Post supprimé avec succès.');
-
-    return $this->redirectToRoute('discussion_show', ['id' => $discussionId]);
-}
-
-/**
- * Supprimer un commentaire en tant qu'administrateur.
- */
-#[Route('/admin/comment/{id}/delete', name: 'admin_delete_comment', methods: ['POST'])]
-public function deleteCommentAsAdmin(Commentaire $commentaire, EntityManagerInterface $entityManager): Response
-{
-    // Vérifiez que l'utilisateur a le rôle ADMIN
-    $this->denyAccessUnlessGranted('ROLE_ADMIN');
-
-    $discussionId = $commentaire->getPost()->getDiscussion()->getId(); // Obtenez l'ID de la discussion pour redirection
-
-    // Supprimez le commentaire
-    $entityManager->remove($commentaire);
-    $entityManager->flush();
-
-    $this->addFlash('success', 'Commentaire supprimé avec succès.');
-
-    return $this->redirectToRoute('discussion_show', ['id' => $discussionId]);
-}
-/**
- * Supprimer un commentaire en tant qu'administrateur ou modérateur.
- */
-#[Route('/moderator/comment/{id}/delete', name: 'moderator_delete_comment', methods: ['POST'])]
-public function deleteCommentAsModerator(Commentaire $commentaire, EntityManagerInterface $entityManager): Response
-{
-    $this->denyAccessUnlessGranted('ROLE_MODERATOR');
-
-    $discussionId = $commentaire->getPost()->getDiscussion()->getId(); // Obtenez l'ID de la discussion pour redirection
-
-    // Supprimez le commentaire
-    $entityManager->remove($commentaire);
-    $entityManager->flush();
-
-    $this->addFlash('success', 'Commentaire supprimé avec succès.');
-
-    return $this->redirectToRoute('discussion_show', ['id' => $discussionId]);
-}
-
-#[Route('/discussion/{id}/close', name: 'close_discussion', methods: ['POST'])]
-public function closeDiscussion(Discussion $discussion, EntityManagerInterface $entityManager): Response
-{
-    // Vérifier les droits (administrateurs et modérateurs seulement)
-    if (!$this->isGranted('ROLE_ADMIN') && !$this->isGranted('ROLE_MODERATOR')) {
-        $this->addFlash('error', 'Vous n\'avez pas l\'autorisation de fermer cette discussion.');
         return $this->redirectToRoute('discussion_show', ['id' => $discussion->getId()]);
     }
 
-    // Mettre à jour l'état de la discussion
-    $discussion->setIsClosed(true);
-    $entityManager->flush();
+    public function filCommun(
+        Request $request,
+        NotificationRepository $notificationRepository,
+        DiscussionRepository $discussionRepository,
+        PostRepository $postRepository
+    ): Response {
+        $user = $this->getUser();
 
-    $this->addFlash('success', 'La discussion a été fermée avec succès.');
-    return $this->redirectToRoute('discussion_show', ['id' => $discussion->getId()]);
-}
+        // Récupération des notifications non lues pour l'utilisateur connecté
+        $unreadCount = $user ? count($notificationRepository->findUnreadByUser($user)) : 0;
 
-/**
- * Ajouter un message dans une discussion.
- */
-#[Route('/discussion/{id}/post', name: 'post_message', methods: ['POST'])]
-public function postMessage(
-    Discussion $discussion,
-    Request $request,
-    EntityManagerInterface $entityManager,
-    NotificationRepository $notificationRepository,
-    AbonnementRepository $abonnementRepository
-): Response {
-    $post = new Post();
-    $post->setDiscussion($discussion);
-    $post->setAuteur($this->getUser());
-    $post->setDateCreation(new \DateTime());
+        // Récupération des discussions et posts pour le Fil Commun
+        $discussions = $discussionRepository->findAll();
+        $posts = $postRepository->findBy([], ['dateCreation' => 'DESC']);
 
-    // Création et traitement du formulaire
-    $form = $this->createForm(PostType::class, $post);
-    $form->handleRequest($request);
-
-    if ($form->isSubmitted() && $form->isValid()) {
-        // Sauvegarde du message
-        $entityManager->persist($post);
-
-        // Envoi des notifications aux abonnés
-        $abonnés = $abonnementRepository->findBy(['discussion' => $discussion]);
-        foreach ($abonnés as $abonné) {
-            if ($abonné->getUser() !== $this->getUser()) { // Ne pas notifier l'auteur
-                $notification = new Notification();
-                $notification->setUser($abonné->getUser());
-                $notification->setMessage(sprintf(
-                    'Nouveau message dans la discussion "%s"',
-                    $discussion->getNom()
-                ));
-                $notification->setCreatedAt(new \DateTime());
-                $notification->setIsRead(false);
-
-                $entityManager->persist($notification);
-            }
-        }
-
-        // Enregistrement des notifications et du message
-        $entityManager->flush();
-
-        // Message flash de succès
-        $this->addFlash('success', 'Message ajouté avec succès.');
-    } else {
-        $this->addFlash('error', 'Erreur lors de l\'ajout du message.');
+        return $this->render('discussion/fil_commun.html.twig', [
+            'discussions' => $discussions,
+            'posts' => $posts,
+            'unreadCount' => $unreadCount, // Nombre de notifications non lues
+        ]);
     }
-
-    return $this->redirectToRoute('discussion_show', ['id' => $discussion->getId()]);
-}  
-
-public function filCommun(
-    Request $request, 
-    NotificationRepository $notificationRepository,
-    DiscussionRepository $discussionRepository,
-    PostRepository $postRepository
-): Response {
-    $user = $this->getUser();
-
-    // Récupération des notifications non lues pour l'utilisateur connecté
-    $unreadCount = $user ? count($notificationRepository->findUnreadByUser($user)) : 0;
-
-    // Récupération des discussions et posts pour le Fil Commun
-    $discussions = $discussionRepository->findAll();
-    $posts = $postRepository->findBy([], ['dateCreation' => 'DESC']);
-
-    return $this->render('discussion/fil_commun.html.twig', [
-        'discussions' => $discussions,
-        'posts' => $posts,
-        'unreadCount' => $unreadCount, // Nombre de notifications non lues
-    ]);
-}
-
 }

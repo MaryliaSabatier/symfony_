@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Evenement;
+use App\Entity\Abonnement;
 use App\Entity\Discussion;
 use App\Form\EvenementType;
 use App\Form\DiscussionType;
@@ -202,10 +203,19 @@ public function createTempDiscussion(Request $request, EntityManagerInterface $e
     $form->handleRequest($request);
 
     if ($form->isSubmitted() && $form->isValid()) {
+        // Persister la discussion
         $entityManager->persist($discussion);
         $entityManager->flush();
 
-        $this->addFlash('success', 'La discussion temporaire a été créée avec succès.');
+        // Créer un abonnement pour l'auteur (modérateur)
+        $abonnement = new Abonnement();
+        $abonnement->setUser($this->getUser());
+        $abonnement->setDiscussion($discussion);
+
+        $entityManager->persist($abonnement);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'La discussion temporaire a été créée avec succès. Vous êtes abonné automatiquement.');
         return $this->redirectToRoute('moderator_temp_discussions');
     }
 
@@ -213,6 +223,7 @@ public function createTempDiscussion(Request $request, EntityManagerInterface $e
         'form' => $form->createView(),
     ]);
 }
+
 
 #[Route('/moderateur/discussion/temporary/edit/{id}', name: 'moderator_edit_temp_discussion', methods: ['GET', 'POST'])]
 public function editTempDiscussion(Discussion $discussion, Request $request, EntityManagerInterface $entityManager): Response

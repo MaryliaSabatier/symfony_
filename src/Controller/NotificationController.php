@@ -61,7 +61,7 @@ public function markNotificationsRead(NotificationRepository $notificationReposi
 public function deleteNotification(Notification $notification, Request $request, EntityManagerInterface $entityManager): Response
 {
     if ($notification->getUser() !== $this->getUser()) {
-        throw $this->createAccessDeniedException();
+        throw $this->createAccessDeniedException('Cette notification ne vous appartient pas.');
     }
 
     if ($this->isCsrfTokenValid('delete_notification_' . $notification->getId(), $request->request->get('_token'))) {
@@ -73,5 +73,7 @@ public function deleteNotification(Notification $notification, Request $request,
 
     return $this->redirectToRoute('user_notifications');
 }
+
+
 
 }

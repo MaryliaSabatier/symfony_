@@ -26,6 +26,9 @@ class Notification
     #[ORM\Column(type: 'boolean')]
     private bool $isRead = false;
 
+    #[ORM\ManyToOne(targetEntity: Discussion::class)]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Discussion $discussion = null; 
     public function getId(): ?int
     {
         return $this->id;
@@ -75,6 +78,18 @@ class Notification
     public function setIsRead(bool $isRead): self
     {
         $this->isRead = $isRead;
+
+        return $this;
+    }
+
+    public function getDiscussion(): ?Discussion
+    {
+        return $this->discussion;
+    }
+
+    public function setDiscussion(?Discussion $discussion): self
+    {
+        $this->discussion = $discussion;
 
         return $this;
     }

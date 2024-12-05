@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Entity\Abonnement;
 use App\Entity\Discussion;
 use App\Entity\Evenement;
 use App\Form\UserType;
@@ -174,31 +175,56 @@ class AdminController extends AbstractController
     
 
 
-#[Route('/admin/discussion/temporary/create', name: 'create_temp_discussion', methods: ['GET', 'POST'])]
-public function createTempDiscussion(Request $request, EntityManagerInterface $entityManager): Response
-{
-    // Vérification des rôles (Admin ou Modérateur)
-    $this->denyAccessUnlessGranted('ROLE_ADMIN');
-
-    $discussion = new Discussion();
-    $discussion->setAuteur($this->getUser()); // Définit l'auteur comme utilisateur actuel
-    $discussion->setIsTemporary(true); // Définit comme temporaire
-
-    $form = $this->createForm(DiscussionType::class, $discussion);
-    $form->handleRequest($request);
-
-    if ($form->isSubmitted() && $form->isValid()) {
-        $entityManager->persist($discussion);
-        $entityManager->flush();
-
-        $this->addFlash('success', 'La discussion temporaire a été créée avec succès.');
-        return $this->redirectToRoute('admin_temp_discussions');
+    #[Route('/admin/discussion/temporary/create', name: 'create_temp_discussion', methods: ['GET', 'POST'])]
+    public function createTempDiscussion(
+        Request $request, 
+        EntityManagerInterface $entityManager,
+        UserRepository $userRepository
+    ): Response {
+        // Vérification des rôles (Admin ou Modérateur)
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+    
+        $discussion = new Discussion();
+        $discussion->setAuteur($this->getUser()); // Définit l'auteur comme utilisateur actuel
+        $discussion->setIsTemporary(true); // Définit comme temporaire
+    
+        $form = $this->createForm(DiscussionType::class, $discussion);
+        $form->handleRequest($request);
+    
+        if ($form->isSubmitted() && $form->isValid()) {
+            // Persister la discussion dans la base de données
+            $entityManager->persist($discussion);
+            $entityManager->flush();
+    
+            // Récupérer tous les administrateurs et modérateurs
+            $adminsAndMods = $userRepository->findByRoles(['ROLE_ADMIN', 'ROLE_MODERATOR']);
+    
+            // Créer les abonnements automatiques pour chaque administrateur et modérateur
+            foreach ($adminsAndMods as $user) {
+                $abonnement = new Abonnement();
+                $abonnement->setUser($user);
+                $abonnement->setDiscussion($discussion);
+                $entityManager->persist($abonnement);
+            }
+    
+            // Ajouter l'auteur comme abonné
+            $authorAbonnement = new Abonnement();
+            $authorAbonnement->setUser($this->getUser());
+            $authorAbonnement->setDiscussion($discussion);
+            $entityManager->persist($authorAbonnement);
+    
+            // Sauvegarder tous les abonnements
+            $entityManager->flush();
+    
+            $this->addFlash('success', 'La discussion temporaire a été créée avec succès, et les administrateurs/modérateurs ont été abonnés automatiquement.');
+            return $this->redirectToRoute('admin_temp_discussions');
+        }
+    
+        return $this->render('admin/create_temp_discussion.html.twig', [
+            'form' => $form->createView(),
+        ]);
     }
-
-    return $this->render('admin/create_temp_discussion.html.twig', [
-        'form' => $form->createView(),
-    ]);
-}
+    
 
 #[Route('/admin/discussion/temporary/{id}/edit', name: 'edit_temp_discussion', methods: ['GET', 'POST'])]
 public function editTempDiscussion(Discussion $discussion, Request $request, EntityManagerInterface $entityManager): Response

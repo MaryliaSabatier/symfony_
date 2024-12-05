@@ -37,10 +37,17 @@ class Discussion
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
     private bool $isTemporary = false;
 
+    #[ORM\OneToMany(mappedBy: 'discussion', targetEntity: Abonnement::class, cascade: ['persist', 'remove'])]
+    private Collection $abonnements; 
+
+    
+
     public function __construct()
     {
         $this->posts = new ArrayCollection();
         $this->evenements = new ArrayCollection();
+        $this->abonnements = new ArrayCollection();
+
     }
 
     // Getters et setters
@@ -179,5 +186,35 @@ class Discussion
     }
     return true;
 }
+
+/**
+     * @return Collection<int, Abonnement>
+     */
+    public function getAbonnements(): Collection
+    {
+        return $this->abonnements;
+    }
+
+    public function addAbonnement(Abonnement $abonnement): self
+    {
+        if (!$this->abonnements->contains($abonnement)) {
+            $this->abonnements[] = $abonnement;
+            $abonnement->setDiscussion($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAbonnement(Abonnement $abonnement): self
+    {
+        if ($this->abonnements->removeElement($abonnement)) {
+            // set the owning side to null (unless already changed)
+            if ($abonnement->getDiscussion() === $this) {
+                $abonnement->setDiscussion(null);
+            }
+        }
+
+        return $this;
+    }
 
 }

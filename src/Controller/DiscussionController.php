@@ -584,7 +584,79 @@ public function closeDiscussion(Discussion $discussion, EntityManagerInterface $
     return $this->redirectToRoute('discussion_show', ['id' => $discussion->getId()]);
 }
 
+/**
+ * Ajouter un message dans une discussion.
+ */
+#[Route('/discussion/{id}/post', name: 'post_message', methods: ['POST'])]
+public function postMessage(
+    Discussion $discussion,
+    Request $request,
+    EntityManagerInterface $entityManager,
+    NotificationRepository $notificationRepository,
+    AbonnementRepository $abonnementRepository
+): Response {
+    $post = new Post();
+    $post->setDiscussion($discussion);
+    $post->setAuteur($this->getUser());
+    $post->setDateCreation(new \DateTime());
 
+    // Création et traitement du formulaire
+    $form = $this->createForm(PostType::class, $post);
+    $form->handleRequest($request);
 
-    
+    if ($form->isSubmitted() && $form->isValid()) {
+        // Sauvegarde du message
+        $entityManager->persist($post);
+
+        // Envoi des notifications aux abonnés
+        $abonnés = $abonnementRepository->findBy(['discussion' => $discussion]);
+        foreach ($abonnés as $abonné) {
+            if ($abonné->getUser() !== $this->getUser()) { // Ne pas notifier l'auteur
+                $notification = new Notification();
+                $notification->setUser($abonné->getUser());
+                $notification->setMessage(sprintf(
+                    'Nouveau message dans la discussion "%s"',
+                    $discussion->getNom()
+                ));
+                $notification->setCreatedAt(new \DateTime());
+                $notification->setIsRead(false);
+
+                $entityManager->persist($notification);
+            }
+        }
+
+        // Enregistrement des notifications et du message
+        $entityManager->flush();
+
+        // Message flash de succès
+        $this->addFlash('success', 'Message ajouté avec succès.');
+    } else {
+        $this->addFlash('error', 'Erreur lors de l\'ajout du message.');
+    }
+
+    return $this->redirectToRoute('discussion_show', ['id' => $discussion->getId()]);
+}  
+
+public function filCommun(
+    Request $request, 
+    NotificationRepository $notificationRepository,
+    DiscussionRepository $discussionRepository,
+    PostRepository $postRepository
+): Response {
+    $user = $this->getUser();
+
+    // Récupération des notifications non lues pour l'utilisateur connecté
+    $unreadCount = $user ? count($notificationRepository->findUnreadByUser($user)) : 0;
+
+    // Récupération des discussions et posts pour le Fil Commun
+    $discussions = $discussionRepository->findAll();
+    $posts = $postRepository->findBy([], ['dateCreation' => 'DESC']);
+
+    return $this->render('discussion/fil_commun.html.twig', [
+        'discussions' => $discussions,
+        'posts' => $posts,
+        'unreadCount' => $unreadCount, // Nombre de notifications non lues
+    ]);
+}
+
 }

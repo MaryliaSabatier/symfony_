@@ -1,13 +1,13 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Gestion des événements temporaires{% endblock %}
+{% block title %}Gestion des événements{% endblock %}
 
 {% block body %}
-    <h1>Gestion des événements temporaires</h1>
+    <h1>Gestion des événements</h1>
 
     <div class="mb-3">
         <a href="{{ path('moderator_dashboard') }}" class="btn btn-secondary">Retour au Dashboard</a>
-        <a href="{{ path('moderator_create_event') }}" class="btn btn-success">Ajouter un événement temporaire</a>
+        <a href="{{ path('moderator_create_event') }}" class="btn btn-success">Ajouter un événement </a>
     </div>
 
     <table class="table">
@@ -17,6 +17,7 @@
                 <th>Lieu</th>
                 <th>Date début</th>
                 <th>Date fin</th>
+                <th>Statut</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -28,16 +29,36 @@
                     <td>{{ evenement.dateDebut|date('d/m/Y') }}</td>
                     <td>{{ evenement.dateFin|date('d/m/Y') }}</td>
                     <td>
-                        <a href="{{ path('moderator_edit_event', { 'id': evenement.id }) }}" class="btn btn-warning">Modifier</a>
-                        <form method="post" action="{{ path('moderator_delete_event', { 'id': evenement.id }) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet événement ?');" style="display:inline;">
+                        {% if evenement.isClosed %}
+                            <span class="badge bg-success">Fermé</span>
+                        {% else %}
+                            <span class="badge bg-warning">Ouvert</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <!-- Bouton Modifier -->
+                        <a href="{{ path('moderator_edit_event', { 'id': evenement.id }) }}" class="btn btn-warning btn-sm">Modifier</a>
+                        
+                        <!-- Bouton Supprimer -->
+                        <form method="post" action="{{ path('moderator_delete_event', { 'id': evenement.id }) }}" 
+                              onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet événement ?');" 
+                              style="display:inline;">
                             <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ evenement.id) }}">
-                            <button class="btn btn-danger">Supprimer</button>
+                            <button class="btn btn-danger btn-sm">Supprimer</button>
                         </form>
+
+                        <!-- Bouton Fermer -->
+                        {% if not evenement.isClosed %}
+                            <form method="post" action="{{ path('moderator_close_event', { 'id': evenement.id }) }}" style="display:inline;">
+                                <input type="hidden" name="_token" value="{{ csrf_token('close_event_' ~ evenement.id) }}">
+                                <button class="btn btn-secondary btn-sm">Fermer</button>
+                            </form>
+                        {% endif %}
                     </td>
                 </tr>
             {% else %}
                 <tr>
-                    <td colspan="5">Aucun événement trouvé.</td>
+                    <td colspan="6">Aucun événement trouvé.</td>
                 </tr>
             {% endfor %}
         </tbody>

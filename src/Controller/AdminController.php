@@ -4,9 +4,11 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Entity\Discussion;
+use App\Entity\Evenement;
 use App\Form\UserType;
 use App\Form\UserCreateType;
 use App\Form\DiscussionType;
+use App\Form\EvenementType;
 use App\Repository\DiscussionRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -149,7 +151,13 @@ class AdminController extends AbstractController
             $this->addFlash('error', 'Échec de la validation du token CSRF.');
             return $this->redirectToRoute('admin_temp_discussions');
         }
-    
+        
+            // Vérifiez si tous les événements associés sont fermés
+    if (!$discussion->areAllEventsClosed()) {
+        $this->addFlash('error', 'Impossible de fermer la discussion temporaire. Tous les événements associés doivent être fermés.');
+        return $this->redirectToRoute('admin_temp_discussions');
+    }
+
         // Fermez la discussion si elle est temporaire et ouverte
         if ($discussion->isTemporary() && !$discussion->isClosed()) {
             $discussion->setIsClosed(true);
@@ -171,8 +179,7 @@ public function createTempDiscussion(Request $request, EntityManagerInterface $e
 {
     // Vérification des rôles (Admin ou Modérateur)
     $this->denyAccessUnlessGranted('ROLE_ADMIN');
-    $this->denyAccessUnlessGranted('ROLE_MODERATOR');
-    
+
     $discussion = new Discussion();
     $discussion->setAuteur($this->getUser()); // Définit l'auteur comme utilisateur actuel
     $discussion->setIsTemporary(true); // Définit comme temporaire
@@ -231,6 +238,39 @@ public function deleteTempDiscussion(
     return $this->redirectToRoute('admin_temp_discussions');
 }
 
+#[Route('/admin/events-temporaires', name: 'admin_temp_events', methods: ['GET'])]
+public function manageTempEvents(EntityManagerInterface $entityManager): Response
+{
+    $this->denyAccessUnlessGranted('ROLE_ADMIN');
+
+    // Récupère tous les événements temporaires
+    $events = $entityManager->getRepository(Evenement::class)->findBy(['isTemporary' => true]);
+
+    return $this->render('admin/manage_temp_events.html.twig', [
+        'events' => $events,
+    ]);
+}
+
+
+#[Route('/admin/event/close/{id}', name: 'admin_close_temp_event', methods: ['POST'])]
+public function closeTempEvent(Evenement $event, Request $request, EntityManagerInterface $entityManager): Response
+{
+    if (!$this->isCsrfTokenValid('close_temp_event_' . $event->getId(), $request->request->get('_token'))) {
+        $this->addFlash('error', 'Échec de la validation du token CSRF.');
+        return $this->redirectToRoute('admin_event_management');
+    }
+
+    if (!$event->isClosed()) {
+        $event->setIsClosed(true);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'L\'événement a été fermé avec succès.');
+    } else {
+        $this->addFlash('error', 'Cet événement est déjà fermé.');
+    }
+
+    return $this->redirectToRoute('admin_event_management');
+}
 
 
 }

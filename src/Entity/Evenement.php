@@ -47,6 +47,22 @@ class Evenement
         $this->abonnements = new ArrayCollection();
     }
 
+
+        #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $isClosed = false;
+
+    public function isClosed(): bool
+    {
+        return $this->isClosed;
+    }
+
+    public function setIsClosed(bool $isClosed): self
+    {
+        $this->isClosed = $isClosed;
+
+        return $this;
+    }
+
     // Getters et setters
 
     public function getId(): ?int

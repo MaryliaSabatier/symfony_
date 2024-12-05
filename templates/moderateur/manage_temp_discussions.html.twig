@@ -23,6 +23,7 @@
                     <th>Nom</th>
                     <th>Auteur</th>
                     <th>Statut</th>
+                    <th>Événements</th> <!-- Ajout de la colonne pour afficher l'état des événements -->
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -33,14 +34,31 @@
                         <td>{{ discussion.auteur.nomUtilisateur }}</td>
                         <td>{{ discussion.isClosed ? 'Fermée' : 'Ouverte' }}</td>
                         <td>
+                            {% set openEvents = discussion.evenements|filter(event => not event.isClosed) %}
+                            {% if openEvents|length > 0 %}
+                                <span class="text-danger">Événements non fermés : {{ openEvents|length }}</span>
+                            {% else %}
+                                <span class="text-success">Tous les événements sont fermés</span>
+                            {% endif %}
+                        </td>
+                        <td>
                             <!-- Bouton Modifier -->
                             <a href="{{ path('moderator_edit_temp_discussion', { id: discussion.id }) }}" class="btn btn-warning btn-sm">Modifier</a>
 
                             <!-- Bouton Fermer -->
                             {% if not discussion.isClosed %}
-                                <form action="{{ path('close_discussion', { id: discussion.id }) }}" method="post" style="display: inline;">
+                                <form action="{{ path('moderator_close_temp_discussion', { id: discussion.id }) }}" method="post" style="display: inline;">
                                     <input type="hidden" name="_token" value="{{ csrf_token('close_discussion_' ~ discussion.id) }}">
-                                    <button type="submit" class="btn btn-secondary btn-sm">Fermer</button>
+                                    <button 
+                                        type="submit" 
+                                        class="btn btn-secondary btn-sm"
+                                        {% if openEvents|length > 0 %}
+                                            disabled
+                                            title="Impossible de fermer : tous les événements associés ne sont pas fermés."
+                                        {% endif %}
+                                    >
+                                        Fermer
+                                    </button>
                                 </form>
                             {% endif %}
 

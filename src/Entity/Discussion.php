@@ -169,4 +169,15 @@ class Discussion
 
         return $this;
     }
+
+    public function areAllEventsClosed(): bool
+{
+    foreach ($this->evenements as $evenement) {
+        if (!$evenement->isClosed()) {
+            return false;
+        }
+    }
+    return true;
+}
+
 }

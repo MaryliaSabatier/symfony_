@@ -21,8 +21,13 @@
         <!-- Bouton pour revenir au Fil Commun -->
         <a href="{{ path('fil_commun') }}" class="btn btn-secondary mb-3">← Retour au Fil Commun</a>
 
- <!-- Titre de la discussion -->
-<h1 class="mb-3">{{ discussion.nom }}</h1>
+<!-- Titre de la discussion avec état -->
+<h1 class="mb-3">
+    {{ discussion.nom }}
+    {% if discussion.isClosed %}
+        <span class="badge bg-danger">Fermée</span>
+    {% endif %}
+</h1>
 <p><strong>Créé par :</strong> {{ discussion.auteur.nomUtilisateur }}</p>
 
 <!-- Bouton d'abonnement/désabonnement -->
@@ -60,22 +65,29 @@
                         <p><strong>Date de début :</strong> {{ evenement.dateDebut|date('d/m/Y') }}</p>
                         <p><strong>Date de fin :</strong> {{ evenement.dateFin|date('d/m/Y') }}</p>
 
-                        <!-- Boutons d'abonnement/désabonnement -->
-                        <div class="event-actions mt-3">
-                            {% if abonnementIds is defined and evenement.id in abonnementIds %}
-                                <!-- Bouton pour se désabonner -->
-                                <form action="{{ path('evenement_desabonner', { id: evenement.id }) }}" method="post" class="d-inline">
-                                    <input type="hidden" name="_token" value="{{ csrf_token('desabonner_evenement_' ~ evenement.id) }}">
-                                    <button type="submit" class="btn btn-danger">Se désabonner</button>
-                                </form>
-                            {% else %}
-                            <!-- Si l'utilisateur n'est pas abonné -->
-                            <form action="{{ path('evenement_abonner', { id: evenement.id }) }}" method="post" class="d-inline">
-                                <input type="hidden" name="_token" value="{{ csrf_token('abonner_evenement_' ~ evenement.id) }}">
-                                <button type="submit" class="btn btn-primary">S'abonner</button>
-                            </form>
-                            {% endif %}
-                        </div>
+
+<!-- Boutons d'abonnement/désabonnement -->
+<div class="event-actions mt-3">
+    {% if evenement.isClosed %}
+        <span class="badge bg-secondary">Événement terminé</span>
+    {% else %}
+        {% if abonnementIds is defined and evenement.id in abonnementIds %}
+            <!-- Bouton pour se désabonner -->
+            <form action="{{ path('evenement_desabonner', { id: evenement.id }) }}" method="post" class="d-inline">
+                <input type="hidden" name="_token" value="{{ csrf_token('desabonner_evenement_' ~ evenement.id) }}">
+                <button type="submit" class="btn btn-danger">Se désabonner</button>
+            </form>
+        {% else %}
+            <!-- Si l'utilisateur n'est pas abonné -->
+            <form action="{{ path('evenement_abonner', { id: evenement.id }) }}" method="post" class="d-inline">
+                <input type="hidden" name="_token" value="{{ csrf_token('abonner_evenement_' ~ evenement.id) }}">
+                <button type="submit" class="btn btn-primary">S'abonner</button>
+            </form>
+        {% endif %}
+    {% endif %}
+</div>
+
+
                     </div>
                 {% endfor %}
             {% else %}

@@ -4,44 +4,50 @@
 
 {% block body %}
 <div class="container-fluid">
-    <div class="row">
-        <!-- Menu latéral gauche -->
-        <div class="col-md-2 col-3 bg-primary text-white sidebar">
-            <div class="menu p-3">
-                <h5 class="text-center">Navigation</h5>
-
-                <div class="menu-item mt-4">
-                    <a href="{{ path('fil_commun') }}" class="text-white d-flex align-items-center mb-2">
-                        <i class="fas fa-stream mr-2"></i> Fil Commun
-                    </a>
-                </div>
-
-                {% for discussion in discussions %}
-                    <div class="menu-item mb-3">
-                        <a href="{{ path('discussion_show', { 'id': discussion.id }) }}" class="text-white d-flex align-items-center">
-                            <i class="fas fa-comments mr-2"></i> {{ discussion.nom }}
-                        </a>
-                    </div>
-                {% else %}
-                    <p class="text-white">Aucune discussion disponible.</p>
-                {% endfor %}
-
-                <hr class="bg-light">
-
-                <div class="menu-item mb-3">
-                    <a href="{{ path('user_edit_profile') }}" class="text-white d-flex align-items-center">
-                        <i class="fas fa-user-edit mr-2"></i> Modifier Profil
-                    </a>
-                </div>
-
-                <div class="menu-item">
-                    <a href="{{ path('app_logout') }}" class="text-white d-flex align-items-center">
-                        <i class="fas fa-sign-out-alt mr-2"></i> Déconnexion
-                    </a>
-                </div>
+    <!-- Barre de navigation supérieure -->
+<div class="row bg-light shadow-sm p-2 mb-0 align-items-center">
+    <div class="col d-flex justify-content-between align-items-center">
+        <h2 class="m-0">Alhambra</h2>
+        <!-- Icone Notifications -->
+        <div class="notifications position-relative">
+            <a href="{{ path('user_notifications') }}" class="notification-icon text-dark position-relative">
+                <i class="fa fa-bell fa-lg"></i>
+                {% if unreadCount > 0 %}
+                    <span class="badge bg-danger position-absolute top-0 start-100 translate-middle">
+                        {{ unreadCount }}
+                    </span>
+                {% endif %}
+                </a>
             </div>
         </div>
+    </div>
 
+    <div class="row">
+        <!-- Menu latéral gauche -->
+<div class="col-md-2 col-3 bg-primary text-white sidebar d-flex flex-column p-3" style="height: 100vh;">
+        <h5 class="text-center">Les discussions</h5>
+
+        {% for discussion in discussions %}
+            <div class="menu-item mb-3">
+                <a href="{{ path('discussion_show', { 'id': discussion.id }) }}" class="text-white d-flex align-items-center">
+                    <i class="fas fa-comments mr-2"></i> {{ discussion.nom }}
+                </a>
+            </div>
+        {% else %}
+            <p class="text-white">Aucune discussion disponible.</p>
+        {% endfor %}
+        <hr class="bg-light">
+        <div class="menu-item mb-3">
+            <a href="{{ path('user_edit_profile') }}" class="text-white d-flex align-items-center">
+                <i class="fas fa-user-edit mr-2"></i> Modifier Profil
+            </a>
+        </div>
+        <div class="menu-item">
+            <a href="{{ path('app_logout') }}" class="text-white d-flex align-items-center">
+                <i class="fas fa-sign-out-alt mr-2"></i> Déconnexion
+            </a>
+        </div>
+    </div>
         <!-- Contenu principal -->
         <div class="col-md-10 col-9 content bg-light p-4">
             <h2 class="mb-4">Fil Commun</h2>
@@ -150,6 +156,31 @@
                     <p>Aucun post disponible.</p>
                 {% endfor %}
             </div>
+            <!-- Pagination -->
+<div class="pagination mt-4">
+    <nav aria-label="Pagination">
+        <ul class="pagination justify-content-center">
+            {% if currentPage > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ path('fil_commun', { page: currentPage - 1 }) }}">Précédent</a>
+                </li>
+            {% endif %}
+
+            {% for i in 1..totalPages %}
+                <li class="page-item {% if i == currentPage %}active{% endif %}">
+                    <a class="page-link" href="{{ path('fil_commun', { page: i }) }}">{{ i }}</a>
+                </li>
+            {% endfor %}
+
+            {% if currentPage < totalPages %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ path('fil_commun', { page: currentPage + 1 }) }}">Suivant</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+
         </div>
     </div>
 </div>

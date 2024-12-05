@@ -1,41 +1,79 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Gestion des discussions{% endblock %}
+{% block title %}Gestion des Discussions Temporaires{% endblock %}
 
 {% block body %}
-    <h1>Gestion des discussions</h1>
+<div class="container mt-4">
+    <h1 class="mb-4">Gestion des Discussions Temporaires</h1>
 
-    <div class="mb-3">
-        <a href="{{ path('moderator_dashboard') }}" class="btn btn-secondary">Retour au Dashboard</a>
-        <a href="{{ path('moderator_create_discussion') }}" class="btn btn-success">Ajouter une discussion</a>
+    <!-- Bouton retour au dashboard -->
+    <div class="mb-4">
+        <a href="{{ path('moderator_dashboard') }}" class="btn btn-primary">← Retour au Tableau de Bord</a>
     </div>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Nom</th>
-                <th>Auteur</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for discussion in discussions %}
+    <!-- Bouton pour ajouter une discussion -->
+    <div class="mb-4">
+        <a href="{{ path('moderator_create_temp_discussion') }}" class="btn btn-success">Ajouter une Discussion Temporaire</a>
+    </div>
+
+    {% if discussions|length > 0 %}
+        <table class="table">
+            <thead>
                 <tr>
-                    <td>{{ discussion.nom }}</td>
-                    <td>{{ discussion.auteur.nomUtilisateur }}</td>
-                    <td>
-                        <a href="{{ path('moderator_edit_discussion', { 'id': discussion.id }) }}" class="btn btn-warning">Modifier</a>
-                        <form method="post" action="{{ path('moderator_delete_discussion', { 'id': discussion.id }) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette discussion ?');" style="display:inline;">
-                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ discussion.id) }}">
-                            <button class="btn btn-danger">Supprimer</button>
-                        </form>
-                    </td>
+                    <th>Nom</th>
+                    <th>Auteur</th>
+                    <th>Statut</th>
+                    <th>Événements</th>
+                    <th>Actions</th>
                 </tr>
-            {% else %}
-                <tr>
-                    <td colspan="3">Aucune discussion trouvée.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                {% for discussion in discussions %}
+                    <tr>
+                        <td>{{ discussion.nom }}</td>
+                        <td>{{ discussion.auteur.nomUtilisateur }}</td>
+                        <td>{{ discussion.isClosed ? 'Fermée' : 'Ouverte' }}</td>
+                        <td>
+                            {% set openEvents = discussion.evenements|filter(event => not event.isClosed) %}
+                            {% if openEvents|length > 0 %}
+                                <span class="text-danger">Événements non fermés : {{ openEvents|length }}</span>
+                            {% else %}
+                                <span class="text-success">Tous les événements sont fermés</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <!-- Bouton Modifier -->
+                            <a href="{{ path('moderator_edit_temp_discussion', { id: discussion.id }) }}" class="btn btn-warning btn-sm">Modifier</a>
+
+                            <!-- Bouton Fermer -->
+                            {% if not discussion.isClosed %}
+                                <form action="{{ path('moderator_close_temp_discussion', { id: discussion.id }) }}" method="post" style="display: inline;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('close_discussion_' ~ discussion.id) }}">
+                                    <button 
+                                        type="submit" 
+                                        class="btn btn-secondary btn-sm"
+                                        {% if openEvents|length > 0 %}
+                                            disabled
+                                            title="Impossible de fermer : tous les événements associés ne sont pas fermés."
+                                        {% endif %}
+                                    >
+                                        Fermer
+                                    </button>
+                                </form>
+                            {% endif %}
+
+                            <!-- Bouton Supprimer -->
+                            <form action="{{ path('moderator_delete_temp_discussion', { id: discussion.id }) }}" method="post" style="display: inline;">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete_temp_discussion_' ~ discussion.id) }}">
+                                <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="alert alert-info">Aucune discussion temporaire trouvée.</p>
+    {% endif %}
+</div>
 {% endblock %}

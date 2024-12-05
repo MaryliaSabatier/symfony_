@@ -251,5 +251,64 @@ public function deleteTempDiscussion(
     return $this->redirectToRoute('moderator_temp_discussions');
 }
 
+#[Route('/moderateur/evenement/fermer/{id}', name: 'moderator_close_event', methods: ['POST'])]
+public function closeEvent(Evenement $evenement, Request $request, EntityManagerInterface $entityManager): Response
+{
+    $this->denyAccessUnlessGranted('ROLE_MODERATOR');
+
+    // Vérification CSRF
+    if (!$this->isCsrfTokenValid('close_event_' . $evenement->getId(), $request->request->get('_token'))) {
+        $this->addFlash('error', 'Échec de la validation du token CSRF.');
+        return $this->redirectToRoute('moderator_manage_events');
+    }
+
+    // Fermeture de l'événement
+    if (!$evenement->isClosed()) {
+        $evenement->setIsClosed(true);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'L\'événement a été fermé avec succès.');
+    } else {
+        $this->addFlash('error', 'Cet événement est déjà fermé.');
+    }
+
+    return $this->redirectToRoute('moderator_manage_events');
+}
+
+#[Route('/moderateur/discussion/{id}/close', name: 'moderator_close_temp_discussion', methods: ['POST'])]
+public function closeTempDiscussion(
+    Discussion $discussion, 
+    Request $request, 
+    EntityManagerInterface $entityManager
+): Response {
+    $this->denyAccessUnlessGranted('ROLE_MODERATOR');
+
+    // Vérifiez le token CSRF
+    if (!$this->isCsrfTokenValid('close_discussion_' . $discussion->getId(), $request->request->get('_token'))) {
+        $this->addFlash('error', 'Échec de la validation du token CSRF.');
+        return $this->redirectToRoute('moderator_temp_discussions');
+    }
+
+    // Vérifiez si des événements associés sont encore ouverts
+    $openEvents = $discussion->getEvenements()->filter(function ($event) {
+        return !$event->isClosed();
+    });
+
+    if (count($openEvents) > 0) {
+        $this->addFlash('error', 'Impossible de fermer la discussion temporaire. Tous les événements associés doivent être fermés.');
+        return $this->redirectToRoute('moderator_temp_discussions');
+    }
+
+    // Fermez la discussion
+    if (!$discussion->isClosed()) {
+        $discussion->setIsClosed(true);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'La discussion temporaire a été fermée avec succès.');
+    }
+
+    return $this->redirectToRoute('moderator_temp_discussions');
+}
+
 
 }

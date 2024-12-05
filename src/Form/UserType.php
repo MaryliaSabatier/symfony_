@@ -6,6 +6,7 @@ use App\Entity\User;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -14,7 +15,9 @@ class UserType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('email', EmailType::class)
+            ->add('email', EmailType::class, [
+                'label' => 'Email',
+            ])
             ->add('roles', ChoiceType::class, [
                 'choices' => [
                     'Utilisateur' => 'ROLE_USER',
@@ -22,6 +25,13 @@ class UserType extends AbstractType
                 ],
                 'multiple' => true,
                 'expanded' => true,
+                'label' => 'Rôles',
+            ])
+            ->add('plainPassword', PasswordType::class, [
+                'label' => 'Mot de passe',
+                'required' => false, // Optionnel
+                'mapped' => false,  // Non lié directement à l'entité
+                'help' => 'Laissez vide pour conserver le mot de passe actuel.',
             ]);
     }
 

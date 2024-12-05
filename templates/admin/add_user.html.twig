@@ -6,7 +6,27 @@
     <h1>Ajouter un utilisateur</h1>
 
     {{ form_start(form) }}
-        {{ form_widget(form) }}
+        {{ form_errors(form) }}
+        <div class="mb-3">
+            {{ form_label(form.email) }}
+            {{ form_widget(form.email, { 'attr': { 'class': 'form-control' } }) }}
+            {{ form_help(form.email) }}
+        </div>
+        <div class="mb-3">
+            {{ form_label(form.nomUtilisateur) }}
+            {{ form_widget(form.nomUtilisateur, { 'attr': { 'class': 'form-control' } }) }}
+            {{ form_help(form.nomUtilisateur) }}
+        </div>
+        <div class="mb-3">
+            {{ form_label(form.roles) }}
+            {{ form_widget(form.roles, { 'attr': { 'class': 'form-check' } }) }}
+            {{ form_help(form.roles) }}
+        </div>
+        <div class="mb-3">
+            {{ form_label(form.plainPassword) }}
+            {{ form_widget(form.plainPassword, { 'attr': { 'class': 'form-control' } }) }}
+            {{ form_help(form.plainPassword) }}
+        </div>
         <button type="submit" class="btn btn-primary">Ajouter l'utilisateur</button>
     {{ form_end(form) }}
 

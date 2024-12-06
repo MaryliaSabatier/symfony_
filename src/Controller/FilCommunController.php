@@ -133,7 +133,8 @@ class FilCommunController extends AbstractController
                 if ($abonnement->getUser() !== $user) {
                     $notification = $notificationRepository->createNotification(
                         $abonnement->getUser(),
-                        sprintf('Nouveau commentaire dans la discussion : %s', $discussion->getNom())
+                        sprintf('Nouveau commentaire dans la discussion : %s', $discussion->getNom()),
+                        $discussion
                     );
                     $entityManager->persist($notification);
                 }
@@ -152,8 +153,8 @@ class FilCommunController extends AbstractController
     {
         $user = $this->getUser();
 
-        if ($post->getAuteur() !== $user) {
-            $this->addFlash('error', 'Vous ne pouvez modifier que vos propres posts.');
+        if ($post->getAuteur() !== $user && !$this->isGranted('ROLE_MODERATOR') && !$this->isGranted('ROLE_ADMIN')) {
+            $this->addFlash('error', 'Vous n\'avez pas l\'autorisation de modifier ce post.');
             return $this->redirectToRoute('fil_commun');
         }
 
@@ -177,8 +178,8 @@ class FilCommunController extends AbstractController
     {
         $user = $this->getUser();
 
-        if ($post->getAuteur() !== $user) {
-            $this->addFlash('error', 'Vous ne pouvez supprimer que vos propres posts.');
+        if ($post->getAuteur() !== $user && !$this->isGranted('ROLE_MODERATOR') && !$this->isGranted('ROLE_ADMIN')) {
+            $this->addFlash('error', 'Vous n\'avez pas l\'autorisation de supprimer ce post.');
             return $this->redirectToRoute('fil_commun');
         }
 
@@ -200,27 +201,28 @@ class FilCommunController extends AbstractController
         EntityManagerInterface $entityManager
     ): Response {
         $user = $this->getUser();
-
-        // Vérification de l'auteur
-        if ($commentaire->getAuteur() !== $user) {
-            $this->addFlash('error', 'Vous ne pouvez modifier que vos propres commentaires.');
+    
+        // Vérifiez si l'utilisateur est l'auteur, modérateur ou administrateur
+        if ($commentaire->getAuteur() !== $user && !$this->isGranted('ROLE_MODERATOR') && !$this->isGranted('ROLE_ADMIN')) {
+            $this->addFlash('error', 'Vous n\'avez pas l\'autorisation de modifier ce commentaire.');
             return $this->redirectToRoute('fil_commun');
         }
-
+    
         $form = $this->createForm(CommentaireType::class, $commentaire);
         $form->handleRequest($request);
-
+    
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
             $this->addFlash('success', 'Commentaire modifié avec succès.');
             return $this->redirectToRoute('fil_commun');
         }
-
+    
         return $this->render('fil_commun/edit_comment.html.twig', [
             'form' => $form->createView(),
             'commentaire' => $commentaire,
         ]);
     }
+    
 
     #[Route('/fil-commun/comment/{id}/delete', name: 'delete_comment', methods: ['POST'])]
     public function deleteComment(
@@ -229,13 +231,12 @@ class FilCommunController extends AbstractController
         EntityManagerInterface $entityManager
     ): Response {
         $user = $this->getUser();
-
-        // Vérification de l'auteur
-        if ($commentaire->getAuteur() !== $user) {
-            $this->addFlash('error', 'Vous ne pouvez supprimer que vos propres commentaires.');
+    
+        if ($commentaire->getAuteur() !== $user && !$this->isGranted('ROLE_MODERATOR') && !$this->isGranted('ROLE_ADMIN')) {
+            $this->addFlash('error', 'Vous n\'avez pas l\'autorisation de supprimer ce commentaire.');
             return $this->redirectToRoute('fil_commun');
         }
-
+    
         if ($this->isCsrfTokenValid('delete_comment_' . $commentaire->getId(), $request->request->get('_token'))) {
             $entityManager->remove($commentaire);
             $entityManager->flush();
@@ -243,7 +244,9 @@ class FilCommunController extends AbstractController
         } else {
             $this->addFlash('error', 'Échec lors de la suppression du commentaire.');
         }
-
+    
         return $this->redirectToRoute('fil_commun');
-    }    
+    }
+    
+      
 }

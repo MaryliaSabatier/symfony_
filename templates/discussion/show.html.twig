@@ -118,29 +118,33 @@
                         <strong>{{ post.auteur.nomUtilisateur }}</strong> : {{ post.contenu }}
                         <p><small>Posté le {{ post.dateCreation|date('d/m/Y H:i') }}</small></p>
 
-                        <!-- Section des commentaires -->
-                        {% if post.commentaires|length > 0 %}
-                            <div class="comments mt-3">
-                                <h5>Commentaires :</h5>
-                                {% for commentaire in post.commentaires %}
-                                    <div class="comment mb-2 p-2 border rounded">
-                                        <strong>{{ commentaire.auteur.nomUtilisateur }}</strong> : {{ commentaire.contenu }}
-                                        <p><small>Posté le {{ commentaire.dateCreation|date('d/m/Y H:i') }}</small></p>
+<!-- Section des commentaires -->
+{% if post.commentaires|length > 0 %}
+    <div class="comments mt-3">
+        <h5>Commentaires :</h5>
+        {% for commentaire in post.commentaires %}
+            <div class="comment mb-2 p-2 border rounded">
+                <strong>{{ commentaire.auteur.nomUtilisateur }}</strong> : {{ commentaire.contenu }}
+                <p><small>Posté le {{ commentaire.dateCreation|date('d/m/Y H:i') }}</small></p>
 
-                                <!-- Boutons de modification/suppression pour les commentaires -->
-                                {% if commentaire.auteur == app.user or is_granted('ROLE_ADMIN') or is_granted('ROLE_MODERATOR') %}
-                                    <div class="comment-actions mt-2">
-                                        <a href="{{ path('edit_comment', { id: commentaire.id }) }}" class="btn btn-sm btn-warning">Modifier</a>
-                                        <form action="{{ path('delete_comment', { id: commentaire.id }) }}" method="post" class="d-inline">
-                                            <input type="hidden" name="_token" value="{{ csrf_token('delete_comment_' ~ commentaire.id) }}">
-                                            <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
-                                        </form>
-                                    </div>
-                                {% endif %}
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
+                <!-- Boutons de modification/suppression pour les commentaires -->
+                {% if commentaire.auteur == app.user or is_granted('ROLE_ADMIN') or is_granted('ROLE_MODERATOR') %}
+                    <div class="comment-actions mt-2">
+                        <!-- Lien pour modifier le commentaire -->
+                        <a href="{{ path('edit_comment', { id: commentaire.id }) }}" class="btn btn-sm btn-warning">Modifier</a>
+
+                        <!-- Formulaire pour supprimer le commentaire -->
+                        <form action="{{ path('delete_comment', { id: commentaire.id }) }}" method="post" class="d-inline">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete_comment_' ~ commentaire.id) }}">
+                            <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
 
                         <!-- Formulaire pour ajouter un commentaire -->
                         <div class="add-comment mt-3">
@@ -158,15 +162,27 @@
                         </div>
 
                     <!-- Boutons de modification/suppression pour les posts -->
-                    {% if post.auteur == app.user or is_granted('ROLE_ADMIN') or is_granted('ROLE_MODERATOR') %}
-                        <div class="post-actions mt-3">
-                            <a href="{{ path('edit_post', { id: post.id }) }}" class="btn btn-warning btn-sm">Modifier</a>
-                            <form action="{{ path('delete_post', { id: post.id }) }}" method="post" class="d-inline">
-                                <input type="hidden" name="_token" value="{{ csrf_token('delete_post' ~ post.id) }}">
-                                <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
-                            </form>
-                        </div>
-                    {% endif %}
+{% if post.auteur == app.user or is_granted('ROLE_ADMIN') or is_granted('ROLE_MODERATOR') %}
+    <div class="post-actions mt-3">
+        <a href="{{ path('edit_post', { id: post.id }) }}" class="btn btn-warning btn-sm">Modifier</a>
+        <form 
+            action="
+                {% if is_granted('ROLE_ADMIN') %}
+                    {{ path('admin_delete_post', { id: post.id }) }}
+                {% elseif is_granted('ROLE_MODERATOR') %}
+                    {{ path('moderator_delete_post', { id: post.id }) }}
+                {% else %}
+                    {{ path('delete_post', { id: post.id }) }}
+                {% endif %}
+            " 
+            method="post" 
+            class="d-inline">
+            <input type="hidden" name="_token" value="{{ csrf_token('delete_post' ~ post.id) }}">
+            <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+        </form>
+    </div>
+{% endif %}
+
                     </div>
                 {% endfor %}
             {% else %}

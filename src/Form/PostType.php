@@ -27,7 +27,7 @@ class PostType extends AbstractType
                 'class' => Discussion::class,
                 'choice_label' => 'nom',
                 'label' => 'Associer à une discussion',
-                'placeholder' => 'Choisissez une discussion (optionnel)',
+                'placeholder' => 'Choisissez une discussion (obligatoire)',
                 'required' => false,
                 'attr' => [
                     'class' => 'form-select',

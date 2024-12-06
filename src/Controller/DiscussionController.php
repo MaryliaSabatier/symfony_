@@ -317,26 +317,30 @@ class DiscussionController extends AbstractController
         ]);
     }
 
-    #[Route('/post/{id}/delete', name: 'delete_post', methods: ['POST'])]
+    #[Route('/post/{id}/delete', name: 'm', methods: ['POST'])]
     public function deletePost(
         Post $post,
         Request $request,
         EntityManagerInterface $entityManager
     ): Response {
-        if ($post->getAuteur() !== $this->getUser()) {
+        // Vérifier que l'utilisateur est l'auteur ou a le rôle ADMIN
+        if ($post->getAuteur() !== $this->getUser() && !$this->isGranted('ROLE_ADMIN')) {
             throw $this->createAccessDeniedException('Vous ne pouvez supprimer que vos propres posts.');
         }
-
+    
+        // Vérifier le token CSRF
         if ($this->isCsrfTokenValid('delete_post' . $post->getId(), $request->request->get('_token'))) {
             $entityManager->remove($post);
             $entityManager->flush();
-
+    
             $this->addFlash('success', 'Post supprimé avec succès.');
         } else {
-            $this->addFlash('error', 'Token CSRF invalide.');
+            $this->addFlash('error', 'Échec de la validation du token CSRF.');
         }
+    
         return $this->redirectToRoute('discussion_show', ['id' => $post->getDiscussion()->getId()]);
     }
+    
 
     #[Route('/comment/edit/{id}', name: 'edit_comment', methods: ['GET', 'POST'])]
     public function editComment(
@@ -545,21 +549,35 @@ class DiscussionController extends AbstractController
      * Supprimer un post en tant qu'administrateur ou modérateur.
      */
     #[Route('/moderator/post/{id}/delete', name: 'moderator_delete_post', methods: ['POST'])]
-    public function deletePostAsModerator(Post $post, EntityManagerInterface $entityManager): Response
+    public function deletePostAsModerator(Post $post, Request $request, EntityManagerInterface $entityManager): Response
     {
-        $this->denyAccessUnlessGranted('ROLE_MODERATOR');
-
-        $discussionId = $post->getDiscussion()->getId(); // Obtenez l'ID de la discussion pour redirection
-
-        // Supprimez le post
-        $entityManager->remove($post);
-        $entityManager->flush();
-
-        $this->addFlash('success', 'Post supprimé avec succès.');
-
-        return $this->redirectToRoute('discussion_show', ['id' => $discussionId]);
+        // Vérifiez que l'utilisateur est modérateur ou auteur du post
+        if (!$this->isGranted('ROLE_MODERATOR') && $post->getAuteur() !== $this->getUser()) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas supprimer ce post.');
+        }
+    
+        // Validation du token CSRF
+        if (!$this->isCsrfTokenValid('delete_post' . $post->getId(), $request->request->get('_token'))) {
+            $this->addFlash('error', 'Échec de la validation du token CSRF.');
+            return $this->redirectToRoute('discussion_show', ['id' => $post->getDiscussion()->getId()]);
+        }
+    
+        try {
+            // Suppression du post
+            $entityManager->remove($post);
+            $entityManager->flush();
+    
+            $this->addFlash('success', 'Le post a été supprimé avec succès.');
+        } catch (\Exception $e) {
+            // Gestion des erreurs
+            $this->addFlash('error', 'Une erreur est survenue lors de la suppression du post.');
+        }
+    
+        // Redirection vers la discussion associée
+        return $this->redirectToRoute('discussion_show', ['id' => $post->getDiscussion()->getId()]);
     }
-
+    
+    
     /**
      * Supprimer un commentaire en tant qu'administrateur.
      */
@@ -689,4 +707,6 @@ class DiscussionController extends AbstractController
             'unreadCount' => $unreadCount, // Nombre de notifications non lues
         ]);
     }
+
+
 }

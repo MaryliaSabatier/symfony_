@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Notification;
 use App\Entity\User;
+use App\Entity\Discussion;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -65,5 +66,20 @@ class NotificationRepository extends ServiceEntityRepository
             ->setParameter('user', $user)
             ->getQuery()
             ->execute();
+    }
+
+    public function createNotification($user, string $message, ?Discussion $discussion = null): Notification
+    {
+        $notification = new Notification();
+        $notification->setUser($user);
+        $notification->setMessage($message);
+        $notification->setCreatedAt(new \DateTime());
+        $notification->setIsRead(false);
+
+        if ($discussion) {
+            $notification->setDiscussion($discussion);
+        }
+
+        return $notification;
     }
 }
